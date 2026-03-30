@@ -33,7 +33,10 @@ public class QueryNestDbContext : IdentityDbContext<IdentityUser>
             entity.HasIndex(x => x.AspNetUserId).IsUnique();
 
             entity.Property(x => x.Name).HasMaxLength(100).IsRequired();
+            entity.Property(x => x.AvatarPath).HasMaxLength(500);
+            entity.Property(x => x.Bio).HasMaxLength(1000);
             entity.Property(x => x.CreatedAt).HasPrecision(3);
+            entity.Property(x => x.UpdatedAt).HasPrecision(3);
 
             entity.HasOne<IdentityUser>()
                 .WithOne()

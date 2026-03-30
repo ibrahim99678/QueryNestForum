@@ -5,8 +5,11 @@ public class UserProfile
     public int UserId { get; set; }
     public string AspNetUserId { get; set; } = default!;
     public string Name { get; set; } = default!;
+    public string? AvatarPath { get; set; }
+    public string? Bio { get; set; }
     public int Reputation { get; set; }
     public DateTime CreatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
 
     public ICollection<Question> Questions { get; set; } = new List<Question>();
     public ICollection<Answer> Answers { get; set; } = new List<Answer>();

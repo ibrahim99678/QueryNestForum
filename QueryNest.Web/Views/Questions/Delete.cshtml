@@ -1,0 +1,27 @@
+@model QueryNest.Web.Models.Questions.QuestionDetailsViewModel
+
+@{
+    ViewData["Title"] = "Delete question";
+}
+
+<h2 class="mb-3">Delete question</h2>
+
+<div class="alert alert-danger">
+    This action cannot be undone. Are you sure you want to delete this question?
+</div>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <h5 class="card-title mb-1">@Model.Title</h5>
+        <div class="text-muted">@Model.CategoryName • by @Model.AuthorName</div>
+    </div>
+</div>
+
+<form asp-action="DeleteConfirmed" method="post">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="id" value="@Model.QuestionId" />
+    <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-danger">Delete</button>
+        <a class="btn btn-outline-secondary" asp-controller="Questions" asp-action="Details" asp-route-id="@Model.QuestionId">Cancel</a>
+    </div>
+</form>

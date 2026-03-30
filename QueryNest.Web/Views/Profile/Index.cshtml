@@ -1,0 +1,73 @@
+@model QueryNest.Web.Models.Profile.ProfileViewModel
+
+@{
+    ViewData["Title"] = "Profile";
+}
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card mb-3">
+            <div class="card-body text-center">
+                @if (!string.IsNullOrWhiteSpace(Model.AvatarPath))
+                {
+                    <img src="@Model.AvatarPath" alt="Avatar" class="img-thumbnail mb-3" style="max-width: 180px;" />
+                }
+                else
+                {
+                    <div class="border rounded mb-3 d-flex align-items-center justify-content-center" style="height: 180px;">
+                        <span class="text-muted">No avatar</span>
+                    </div>
+                }
+
+                <div class="mb-2"><strong>@Model.Name</strong></div>
+                <div class="text-muted mb-2">@Model.Email</div>
+                <div class="badge bg-secondary">Reputation: @Model.Reputation</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Update avatar</h5>
+                <form asp-action="UploadAvatar" method="post" enctype="multipart/form-data">
+                    @Html.AntiForgeryToken()
+                    <div class="mb-3">
+                        <input type="file" name="avatar" class="form-control" accept=".png,.jpg,.jpeg,.gif,.webp" />
+                    </div>
+                    <button type="submit" class="btn btn-outline-primary w-100">Upload</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Edit profile</h5>
+
+                <form asp-action="Update" method="post">
+                    @Html.AntiForgeryToken()
+
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="Name" class="form-label"></label>
+                        <input asp-for="Name" class="form-control" />
+                        <span asp-validation-for="Name" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Bio" class="form-label"></label>
+                        <textarea asp-for="Bio" class="form-control" rows="5"></textarea>
+                        <span asp-validation-for="Bio" class="text-danger"></span>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

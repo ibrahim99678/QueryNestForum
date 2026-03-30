@@ -1,0 +1,54 @@
+@model QueryNest.Web.Models.Questions.CommentViewModel
+
+@{
+    var answerId = (int)ViewData["AnswerId"]!;
+    var questionId = (int)ViewData["QuestionId"]!;
+    var canReply = ViewData["CanReply"] as bool? ?? false;
+}
+
+<div class="border rounded p-2 mb-2">
+    <div class="d-flex justify-content-between">
+        <div class="text-muted small">
+            <span>@Model.AuthorName</span>
+            <span>•</span>
+            <span>@Model.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</span>
+        </div>
+        @if (Model.CanEdit)
+        {
+            <div class="d-flex gap-2">
+                <a class="link-secondary" asp-controller="Comments" asp-action="Edit" asp-route-id="@Model.CommentId">Edit</a>
+                <form asp-controller="Comments" asp-action="Delete" method="post" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@Model.CommentId" />
+                    <input type="hidden" name="questionId" value="@questionId" />
+                    <button type="submit" class="btn btn-link link-danger p-0">Delete</button>
+                </form>
+            </div>
+        }
+    </div>
+    <div class="mt-1" style="white-space: pre-wrap;">@Model.Content</div>
+
+    @if (canReply)
+    {
+        <form asp-controller="Comments" asp-action="Create" method="post" class="mt-2">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="questionId" value="@questionId" />
+            <input type="hidden" name="AnswerId" value="@answerId" />
+            <input type="hidden" name="ParentCommentId" value="@Model.CommentId" />
+            <div class="input-group">
+                <input type="text" name="Content" class="form-control" placeholder="Reply..." />
+                <button type="submit" class="btn btn-outline-primary">Reply</button>
+            </div>
+        </form>
+    }
+
+    @if (Model.Replies.Count > 0)
+    {
+        <div class="mt-2 ms-3">
+            @foreach (var reply in Model.Replies)
+            {
+                @await Html.PartialAsync("_Comment", reply, new ViewDataDictionary(ViewData))
+            }
+        </div>
+    }
+</div>

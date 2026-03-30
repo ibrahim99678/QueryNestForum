@@ -7,6 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\QueryNest.Contract\QueryNest.Contract.csproj" />
     <ProjectReference Include="..\QueryNest.DAL\QueryNest.DAL.csproj" />
     <ProjectReference Include="..\QeryNest.Domain\QueryNest.Domain.csproj" />
