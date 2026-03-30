@@ -1,9 +1,15 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\QueryNest.Contract\QueryNest.Contract.csproj" />
+    <ProjectReference Include="..\QueryNest.DAL\QueryNest.DAL.csproj" />
+    <ProjectReference Include="..\QeryNest.Domain\QueryNest.Domain.csproj" />
+  </ItemGroup>
 
 </Project>

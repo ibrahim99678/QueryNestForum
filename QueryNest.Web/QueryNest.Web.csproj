@@ -6,4 +6,10 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\QueryNest.BLL\QueryNest.BLL.csproj" />
+    <ProjectReference Include="..\QueryNest.Contract\QueryNest.Contract.csproj" />
+    <ProjectReference Include="..\QueryNest.DAL\QueryNest.DAL.csproj" />
+  </ItemGroup>
+
 </Project>
