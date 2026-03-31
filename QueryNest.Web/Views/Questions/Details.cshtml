@@ -41,6 +41,29 @@
             }
         </div>
     }
+
+    <div class="mt-2 d-flex align-items-center gap-2 flex-wrap">
+        <span class="badge bg-primary">Score: @Model.Score</span>
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+            <form asp-controller="Votes" asp-action="Cast" method="post" class="d-inline">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="QuestionId" value="@Model.QuestionId" />
+                <input type="hidden" name="TargetType" value="1" />
+                <input type="hidden" name="TargetId" value="@Model.QuestionId" />
+                <input type="hidden" name="VoteType" value="1" />
+                <button type="submit" class="btn btn-sm btn-outline-success">Upvote</button>
+            </form>
+            <form asp-controller="Votes" asp-action="Cast" method="post" class="d-inline">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="QuestionId" value="@Model.QuestionId" />
+                <input type="hidden" name="TargetType" value="1" />
+                <input type="hidden" name="TargetId" value="@Model.QuestionId" />
+                <input type="hidden" name="VoteType" value="-1" />
+                <button type="submit" class="btn btn-sm btn-outline-danger">Downvote</button>
+            </form>
+        }
+    </div>
 </div>
 
 <div class="card">
@@ -85,10 +108,34 @@
         {
             <div class="card mb-3">
                 <div class="card-body">
-                    <div class="text-muted small mb-2">
-                        <span>@answer.AuthorName</span>
-                        <span>•</span>
-                        <span>@answer.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</span>
+                    <div class="d-flex justify-content-between align-items-start gap-3 mb-2">
+                        <div class="text-muted small">
+                            <span>@answer.AuthorName</span>
+                            <span>•</span>
+                            <span>@answer.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                            <span class="badge bg-primary">Score: @answer.Score</span>
+                            @if (User.Identity?.IsAuthenticated == true)
+                            {
+                                <form asp-controller="Votes" asp-action="Cast" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="QuestionId" value="@Model.QuestionId" />
+                                    <input type="hidden" name="TargetType" value="2" />
+                                    <input type="hidden" name="TargetId" value="@answer.AnswerId" />
+                                    <input type="hidden" name="VoteType" value="1" />
+                                    <button type="submit" class="btn btn-sm btn-outline-success">Upvote</button>
+                                </form>
+                                <form asp-controller="Votes" asp-action="Cast" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="QuestionId" value="@Model.QuestionId" />
+                                    <input type="hidden" name="TargetType" value="2" />
+                                    <input type="hidden" name="TargetId" value="@answer.AnswerId" />
+                                    <input type="hidden" name="VoteType" value="-1" />
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Downvote</button>
+                                </form>
+                            }
+                        </div>
                     </div>
                     <div style="white-space: pre-wrap;">@answer.Content</div>
 
@@ -123,7 +170,8 @@
                             {
                                 ["AnswerId"] = answer.AnswerId,
                                 ["QuestionId"] = Model.QuestionId,
-                                ["CanReply"] = answer.CanComment
+                                ["CanReply"] = answer.CanComment,
+                                ["CanVote"] = User.Identity?.IsAuthenticated == true
                             })
                         }
                     }

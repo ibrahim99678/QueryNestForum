@@ -19,6 +19,7 @@ public class QueryNestDbContext : IdentityDbContext<IdentityUser>
     public DbSet<Answer> Answers => Set<Answer>();
     public DbSet<Comment> Comments => Set<Comment>();
     public DbSet<Vote> Votes => Set<Vote>();
+    public DbSet<Notification> Notifications => Set<Notification>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -204,6 +205,44 @@ public class QueryNestDbContext : IdentityDbContext<IdentityUser>
                     "[VoteType] IN (-1, 1)"
                 );
             });
+        });
+
+        builder.Entity<Notification>(entity =>
+        {
+            entity.ToTable("Notifications");
+            entity.HasKey(x => x.NotificationId);
+
+            entity.Property(x => x.Type).HasConversion<int>().IsRequired();
+            entity.Property(x => x.Message).HasMaxLength(500).IsRequired();
+            entity.Property(x => x.CreatedAt).HasPrecision(3);
+            entity.Property(x => x.ReadAt).HasPrecision(3);
+
+            entity.HasIndex(x => new { x.UserId, x.IsRead, x.CreatedAt });
+
+            entity.HasOne(x => x.User)
+                .WithMany()
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(x => x.ActorUser)
+                .WithMany()
+                .HasForeignKey(x => x.ActorUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(x => x.Question)
+                .WithMany()
+                .HasForeignKey(x => x.QuestionId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(x => x.Answer)
+                .WithMany()
+                .HasForeignKey(x => x.AnswerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(x => x.Comment)
+                .WithMany()
+                .HasForeignKey(x => x.CommentId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
     }
 }

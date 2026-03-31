@@ -17,6 +17,7 @@ public class UnitOfWork : IUnitOfWork
     private IGenericRepository<Answer>? _answers;
     private IGenericRepository<Comment>? _comments;
     private IGenericRepository<Vote>? _votes;
+    private IGenericRepository<Notification>? _notifications;
 
     public UnitOfWork(QueryNestDbContext dbContext)
     {
@@ -31,6 +32,7 @@ public class UnitOfWork : IUnitOfWork
     public IGenericRepository<Answer> Answers => _answers ??= new GenericRepository<Answer>(_dbContext);
     public IGenericRepository<Comment> Comments => _comments ??= new GenericRepository<Comment>(_dbContext);
     public IGenericRepository<Vote> Votes => _votes ??= new GenericRepository<Vote>(_dbContext);
+    public IGenericRepository<Notification> Notifications => _notifications ??= new GenericRepository<Notification>(_dbContext);
 
     public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {

@@ -1,4 +1,5 @@
 using QueryNest.Contract.Auth;
+using QueryNest.Contract.Common;
 using QueryNest.Contract.Questions;
 
 namespace QueryNest.BLL.Interfaces;
@@ -6,6 +7,7 @@ namespace QueryNest.BLL.Interfaces;
 public interface IQuestionService
 {
     Task<List<QuestionListItemDto>> GetLatestAsync(int take = 50, CancellationToken cancellationToken = default);
+    Task<PagedResultDto<QuestionListItemDto>> QueryAsync(QuestionQueryRequestDto request, CancellationToken cancellationToken = default);
     Task<QuestionDetailsDto?> GetDetailsAsync(int questionId, bool incrementViewCount = true, CancellationToken cancellationToken = default);
     Task<QuestionUpsertDataDto> GetUpsertDataAsync(CancellationToken cancellationToken = default);
     Task<QuestionUpsertRequestDto?> GetForEditAsync(int questionId, CancellationToken cancellationToken = default);

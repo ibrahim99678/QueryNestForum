@@ -20,18 +20,52 @@ public class QuestionsController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Index(CancellationToken cancellationToken)
+    public async Task<IActionResult> Index(string? q, int? tagId, string? sort, int page = 1, CancellationToken cancellationToken = default)
     {
-        var items = await _questionService.GetLatestAsync(50, cancellationToken);
-        var model = items.Select(x => new QuestionListItemViewModel
+        var queryResult = await _questionService.QueryAsync(
+            new QueryNest.Contract.Questions.QuestionQueryRequestDto
+            {
+                Query = q,
+                TagId = tagId,
+                Sort = sort ?? "latest",
+                Page = page,
+                PageSize = 20
+            },
+            cancellationToken);
+
+        var data = await _questionService.GetUpsertDataAsync(cancellationToken);
+        var tagOptions = new List<SelectListItem>
         {
-            QuestionId = x.QuestionId,
-            Title = x.Title,
-            CategoryName = x.CategoryName,
-            AuthorName = x.AuthorName,
-            ViewCount = x.ViewCount,
-            CreatedAt = x.CreatedAt
-        }).ToList();
+            new SelectListItem("All tags", string.Empty, tagId is null)
+        };
+        tagOptions.AddRange(data.Tags.Select(t => new SelectListItem(t.Name, t.TagId.ToString(), tagId == t.TagId)));
+
+        var model = new QuestionIndexViewModel
+        {
+            Items = queryResult.Items.Select(x => new QuestionListItemViewModel
+            {
+                QuestionId = x.QuestionId,
+                Title = x.Title,
+                CategoryName = x.CategoryName,
+                AuthorName = x.AuthorName,
+                ViewCount = x.ViewCount,
+                Score = x.Score,
+                AnswerCount = x.AnswerCount,
+                CreatedAt = x.CreatedAt
+            }).ToList(),
+            Query = q,
+            TagId = tagId,
+            Sort = (sort ?? "latest").Trim().ToLowerInvariant(),
+            Page = queryResult.Page,
+            TotalPages = queryResult.TotalPages,
+            TotalCount = queryResult.TotalCount,
+            TagOptions = tagOptions,
+            SortOptions = new List<SelectListItem>
+            {
+                new SelectListItem("Latest", "latest", string.Equals(sort, "latest", StringComparison.OrdinalIgnoreCase) || string.IsNullOrWhiteSpace(sort)),
+                new SelectListItem("Trending", "trending", string.Equals(sort, "trending", StringComparison.OrdinalIgnoreCase))
+            }
+        };
 
         return View(model);
     }
@@ -72,6 +106,7 @@ public class QuestionsController : Controller
             CategoryName = dto.CategoryName,
             AuthorName = dto.AuthorName,
             ViewCount = dto.ViewCount,
+            Score = dto.Score,
             CreatedAt = dto.CreatedAt,
             UpdatedAt = dto.UpdatedAt,
             Tags = dto.Tags.Select(t => t.Name).ToList(),
@@ -82,6 +117,7 @@ public class QuestionsController : Controller
                 AnswerId = a.AnswerId,
                 AuthorName = a.AuthorName,
                 Content = a.Content,
+                Score = a.Score,
                 CreatedAt = a.CreatedAt,
                 CanComment = isAuthenticated,
                 Comments = a.Comments.Select(c => MapComment(c, currentProfileUserId, isAdmin)).ToList()
@@ -101,6 +137,7 @@ public class QuestionsController : Controller
             ParentCommentId = dto.ParentCommentId,
             AuthorName = dto.AuthorName,
             Content = dto.Content,
+            Score = dto.Score,
             CreatedAt = dto.CreatedAt,
             CanEdit = canEdit,
             Replies = dto.Replies.Select(r => MapComment(r, currentProfileUserId, isAdmin)).ToList()

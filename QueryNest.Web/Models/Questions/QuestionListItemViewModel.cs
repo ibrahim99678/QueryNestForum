@@ -7,5 +7,7 @@ public class QuestionListItemViewModel
     public string CategoryName { get; set; } = default!;
     public string AuthorName { get; set; } = default!;
     public int ViewCount { get; set; }
+    public int Score { get; set; }
+    public int AnswerCount { get; set; }
     public DateTime CreatedAt { get; set; }
 }

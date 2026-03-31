@@ -12,6 +12,7 @@ public class QuestionDetailsDto
     public string AuthorName { get; init; } = default!;
     public int AuthorUserId { get; init; }
     public int ViewCount { get; init; }
+    public int Score { get; init; }
     public DateTime CreatedAt { get; init; }
     public DateTime? UpdatedAt { get; init; }
     public IReadOnlyList<TagDto> Tags { get; init; } = [];

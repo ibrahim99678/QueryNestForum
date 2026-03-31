@@ -5,6 +5,7 @@ using QueryNest.Contract.Auth;
 using QueryNest.Contract.Comments;
 using QueryNest.DAL.Interfaces;
 using QueryNest.Domain.Entities;
+using QueryNest.Domain.Enums;
 
 namespace QueryNest.BLL.Services;
 
@@ -12,11 +13,13 @@ public class CommentService : ICommentService
 {
     private readonly UserManager<IdentityUser> _userManager;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly INotificationService _notificationService;
 
-    public CommentService(UserManager<IdentityUser> userManager, IUnitOfWork unitOfWork)
+    public CommentService(UserManager<IdentityUser> userManager, IUnitOfWork unitOfWork, INotificationService notificationService)
     {
         _userManager = userManager;
         _unitOfWork = unitOfWork;
+        _notificationService = notificationService;
     }
 
     public async Task<(AuthResultDto Result, int? QuestionId)> CreateAsync(string aspNetUserId, CommentCreateRequestDto request, CancellationToken cancellationToken = default)
@@ -38,16 +41,20 @@ public class CommentService : ICommentService
             return (AuthResultDto.Failed("Answer not found."), null);
         }
 
+        int? parentCommentAuthorUserId = null;
         if (request.ParentCommentId is not null)
         {
             var parent = await _unitOfWork.Comments.Query()
                 .AsNoTracking()
+                .Select(c => new { c.CommentId, c.AnswerId, c.UserId })
                 .FirstOrDefaultAsync(c => c.CommentId == request.ParentCommentId.Value, cancellationToken);
 
             if (parent is null || parent.AnswerId != request.AnswerId)
             {
                 return (AuthResultDto.Failed("Invalid parent comment."), answer.QuestionId);
             }
+
+            parentCommentAuthorUserId = parent.UserId;
         }
 
         var content = request.Content?.Trim() ?? string.Empty;
@@ -67,6 +74,37 @@ public class CommentService : ICommentService
 
         await _unitOfWork.Comments.AddAsync(comment, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        var questionTitle = await _unitOfWork.Questions.Query()
+            .AsNoTracking()
+            .Where(q => q.QuestionId == answer.QuestionId)
+            .Select(q => q.Title)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (request.ParentCommentId is not null && parentCommentAuthorUserId is not null)
+        {
+            await _notificationService.CreateAsync(
+                recipientUserId: parentCommentAuthorUserId.Value,
+                actorUserId: profile.UserId,
+                type: NotificationType.ReplyPosted,
+                message: $"New reply on: {questionTitle}",
+                questionId: answer.QuestionId,
+                answerId: answer.AnswerId,
+                commentId: comment.CommentId,
+                cancellationToken: cancellationToken);
+        }
+        else
+        {
+            await _notificationService.CreateAsync(
+                recipientUserId: answer.UserId,
+                actorUserId: profile.UserId,
+                type: NotificationType.CommentPosted,
+                message: $"New comment on your answer: {questionTitle}",
+                questionId: answer.QuestionId,
+                answerId: answer.AnswerId,
+                commentId: comment.CommentId,
+                cancellationToken: cancellationToken);
+        }
 
         return (AuthResultDto.Success(), answer.QuestionId);
     }

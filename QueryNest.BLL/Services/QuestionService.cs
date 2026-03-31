@@ -5,6 +5,7 @@ using QueryNest.Contract.Answers;
 using QueryNest.Contract.Auth;
 using QueryNest.Contract.Categories;
 using QueryNest.Contract.Comments;
+using QueryNest.Contract.Common;
 using QueryNest.Contract.Questions;
 using QueryNest.Contract.Tags;
 using QueryNest.DAL.Interfaces;
@@ -34,6 +35,7 @@ public class QuestionService : IQuestionService
             .AsNoTracking()
             .Include(q => q.Category)
             .Include(q => q.User)
+            .Include(q => q.Votes)
             .OrderByDescending(q => q.CreatedAt)
             .Take(take)
             .Select(q => new QuestionListItemDto
@@ -43,9 +45,83 @@ public class QuestionService : IQuestionService
                 CategoryName = q.Category.Name,
                 AuthorName = q.User.Name,
                 ViewCount = q.ViewCount,
+                Score = q.Votes.Select(v => (int)v.VoteType).DefaultIfEmpty(0).Sum(),
+                AnswerCount = q.Answers.Count,
                 CreatedAt = q.CreatedAt
             })
             .ToListAsync(cancellationToken);
+    }
+
+    public async Task<PagedResultDto<QuestionListItemDto>> QueryAsync(QuestionQueryRequestDto request, CancellationToken cancellationToken = default)
+    {
+        var pageSize = request.PageSize <= 0 ? 20 : Math.Min(request.PageSize, 50);
+        var page = request.Page <= 0 ? 1 : request.Page;
+        var sort = string.IsNullOrWhiteSpace(request.Sort) ? "latest" : request.Sort.Trim().ToLowerInvariant();
+        var tagId = request.TagId;
+        var queryText = string.IsNullOrWhiteSpace(request.Query) ? null : request.Query.Trim();
+
+        var query = _unitOfWork.Questions.Query()
+            .AsNoTracking()
+            .Include(q => q.Category)
+            .Include(q => q.User)
+            .Include(q => q.Votes)
+            .AsQueryable();
+
+        if (tagId is not null && tagId.Value > 0)
+        {
+            query = query.Where(q => q.QuestionTags.Any(qt => qt.TagId == tagId.Value));
+        }
+
+        if (!string.IsNullOrWhiteSpace(queryText))
+        {
+            var terms = queryText
+                .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Where(t => t.Length > 0)
+                .Take(5)
+                .ToArray();
+
+            foreach (var term in terms)
+            {
+                var pattern = $"%{term}%";
+                query = query.Where(q =>
+                    EF.Functions.Like(q.Title, pattern) ||
+                    EF.Functions.Like(q.Description, pattern));
+            }
+        }
+
+        query = sort switch
+        {
+            "trending" => query
+                .OrderByDescending(q => q.Votes.Select(v => (int)v.VoteType).DefaultIfEmpty(0).Sum())
+                .ThenByDescending(q => q.CreatedAt),
+            _ => query.OrderByDescending(q => q.CreatedAt)
+        };
+
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        var items = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(q => new QuestionListItemDto
+            {
+                QuestionId = q.QuestionId,
+                Title = q.Title,
+                CategoryName = q.Category.Name,
+                AuthorName = q.User.Name,
+                ViewCount = q.ViewCount,
+                Score = q.Votes.Select(v => (int)v.VoteType).DefaultIfEmpty(0).Sum(),
+                AnswerCount = q.Answers.Count,
+                CreatedAt = q.CreatedAt
+            })
+            .ToListAsync(cancellationToken);
+
+        return new PagedResultDto<QuestionListItemDto>
+        {
+            Items = items,
+            Page = page,
+            PageSize = pageSize,
+            TotalCount = totalCount
+        };
     }
 
     public async Task<QuestionDetailsDto?> GetDetailsAsync(int questionId, bool incrementViewCount = true, CancellationToken cancellationToken = default)
@@ -69,6 +145,7 @@ public class QuestionService : IQuestionService
                 .AsNoTracking()
                 .Include(q => q.User)
                 .Include(q => q.Category)
+                .Include(q => q.Votes)
                 .Include(q => q.QuestionTags)
                 .ThenInclude(qt => qt.Tag)
                 .FirstOrDefaultAsync(q => q.QuestionId == questionId, cancellationToken);
@@ -88,6 +165,7 @@ public class QuestionService : IQuestionService
             AuthorName = question.User.Name,
             AuthorUserId = question.UserId,
             ViewCount = question.ViewCount,
+            Score = question.Votes.Select(v => (int)v.VoteType).DefaultIfEmpty(0).Sum(),
             CreatedAt = question.CreatedAt,
             UpdatedAt = question.UpdatedAt,
             Tags = question.QuestionTags
@@ -101,6 +179,7 @@ public class QuestionService : IQuestionService
                     AuthorUserId = a.UserId,
                     AuthorName = a.User.Name,
                     Content = a.Content,
+                    Score = a.Votes.Select(v => (int)v.VoteType).DefaultIfEmpty(0).Sum(),
                     CreatedAt = a.CreatedAt,
                     Comments = BuildCommentTree(a.Comments)
                 })
@@ -383,6 +462,7 @@ public class QuestionService : IQuestionService
                     AuthorUserId = c.UserId,
                     AuthorName = c.User.Name,
                     Content = c.Content,
+                    Score = c.Votes.Select(v => (int)v.VoteType).DefaultIfEmpty(0).Sum(),
                     CreatedAt = c.CreatedAt
                 }))
             .ToDictionary(n => n.Dto.CommentId);

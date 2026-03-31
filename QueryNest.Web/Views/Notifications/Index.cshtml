@@ -1,0 +1,54 @@
+@model QueryNest.Web.Models.Notifications.NotificationListViewModel
+
+@{
+    ViewData["Title"] = "Notifications";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0">Notifications</h2>
+    <form asp-action="MarkAllRead" method="post" class="d-inline">
+        @Html.AntiForgeryToken()
+        <button type="submit" class="btn btn-outline-secondary">Mark all read</button>
+    </form>
+</div>
+
+@if (Model.Items.Count == 0)
+{
+    <div class="alert alert-info">No notifications.</div>
+}
+else
+{
+    <div class="list-group">
+        @foreach (var n in Model.Items)
+        {
+            var linkController = "Notifications";
+            var linkAction = "Index";
+            var routeId = (int?)null;
+
+            if (n.QuestionId is not null)
+            {
+                linkController = "Questions";
+                linkAction = "Details";
+                routeId = n.QuestionId;
+            }
+
+            <div class="list-group-item d-flex justify-content-between align-items-start gap-3 @(n.IsRead ? "" : "list-group-item-warning")">
+                <div class="flex-grow-1">
+                    <div>@n.Message</div>
+                    <div class="text-muted small">@n.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</div>
+                </div>
+                <div class="d-flex gap-2">
+                    <a class="btn btn-sm btn-outline-primary" asp-controller="@linkController" asp-action="@linkAction" asp-route-id="@routeId">Open</a>
+                    @if (!n.IsRead)
+                    {
+                        <form asp-action="MarkRead" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@n.NotificationId" />
+                            <button type="submit" class="btn btn-sm btn-outline-secondary">Mark read</button>
+                        </form>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+}

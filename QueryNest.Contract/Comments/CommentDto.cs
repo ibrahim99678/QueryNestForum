@@ -7,6 +7,7 @@ public class CommentDto
     public int AuthorUserId { get; init; }
     public string AuthorName { get; init; } = default!;
     public string Content { get; init; } = default!;
+    public int Score { get; init; }
     public DateTime CreatedAt { get; init; }
     public IReadOnlyList<CommentDto> Replies { get; init; } = [];
 }

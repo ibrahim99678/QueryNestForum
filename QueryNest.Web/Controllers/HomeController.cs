@@ -15,7 +15,7 @@ namespace QueryNest.Web.Controllers
 
         public IActionResult Index()
         {
-            return View();
+            return RedirectToAction("Index", "Questions");
         }
 
         public IActionResult Privacy()

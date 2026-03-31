@@ -8,6 +8,7 @@ public class QuestionDetailsViewModel
     public string CategoryName { get; set; } = default!;
     public string AuthorName { get; set; } = default!;
     public int ViewCount { get; set; }
+    public int Score { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
     public List<string> Tags { get; set; } = [];

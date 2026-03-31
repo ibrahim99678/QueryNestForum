@@ -18,13 +18,19 @@ public class QuestionRepository : GenericRepository<Question>, IQuestionReposito
         return await _questions
             .Include(q => q.User)
             .Include(q => q.Category)
+            .Include(q => q.Votes)
             .Include(q => q.QuestionTags)
             .ThenInclude(qt => qt.Tag)
             .Include(q => q.Answers)
             .ThenInclude(a => a.User)
             .Include(q => q.Answers)
+            .ThenInclude(a => a.Votes)
+            .Include(q => q.Answers)
             .ThenInclude(a => a.Comments)
             .ThenInclude(c => c.User)
+            .Include(q => q.Answers)
+            .ThenInclude(a => a.Comments)
+            .ThenInclude(c => c.Votes)
             .FirstOrDefaultAsync(q => q.QuestionId == questionId, cancellationToken);
     }
 }

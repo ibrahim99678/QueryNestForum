@@ -38,6 +38,15 @@
                     <ul class="navbar-nav">
                         @if (User.Identity?.IsAuthenticated == true)
                         {
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle text-dark" href="#" id="notifDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Notifications
+                                    <span id="notifCountBadge" class="badge bg-danger ms-1 d-none"></span>
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="notifDropdown" style="min-width: 320px;">
+                                    <li id="notifDropdownBody" class="px-3 py-2 text-muted">Loading...</li>
+                                </ul>
+                            </li>
                             <li class="nav-item">
                                 <a class="nav-link text-dark" asp-controller="Profile" asp-action="Index">Profile</a>
                             </li>
