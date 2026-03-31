@@ -36,7 +36,8 @@
                                 <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85h-.017ZM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0Z"/>
                             </svg>
                         </span>
-                        <input class="form-control" type="search" name="q" placeholder="Search questions..." aria-label="Search" />
+                        <input id="navbarSearchInput" class="form-control" type="search" name="q" placeholder="Search questions..." aria-label="Search" autocomplete="off" />
+                        <div id="navbarSearchSuggest" class="navbar-search-suggest d-none"></div>
                     </form>
 
                     <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-2">
@@ -48,25 +49,16 @@
                                 </form>
                             </li>
                             <li class="nav-item">
-                                <a class="btn btn-primary nav-pill-btn" asp-area="" asp-controller="Questions" asp-action="Create">Ask</a>
+                                <a class="btn btn-primary nav-icon-btn d-none d-lg-inline-flex" asp-area="" asp-controller="Questions" asp-action="Create" aria-label="Ask">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor">
+                                        <path d="M8 2a.5.5 0 0 1 .5.5V7.5H13.5a.5.5 0 0 1 0 1H8.5V13.5a.5.5 0 0 1-1 0V8.5H2.5a.5.5 0 0 1 0-1H7.5V2.5A.5.5 0 0 1 8 2Z"/>
+                                    </svg>
+                                </a>
+                                <a class="btn btn-primary nav-pill-btn d-lg-none" asp-area="" asp-controller="Questions" asp-action="Create">Ask</a>
                             </li>
                             <li class="nav-item">
                                 <a class="btn btn-outline-secondary nav-pill-btn" asp-area="" asp-controller="Dashboard" asp-action="Index">Dashboard</a>
                             </li>
-                            @if (User.IsInRole("Admin") || User.IsInRole("Moderator"))
-                            {
-                                <li class="nav-item dropdown">
-                                    <a class="btn btn-outline-secondary nav-pill-btn dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                        Admin
-                                    </a>
-                                    <ul class="dropdown-menu dropdown-menu-end">
-                                        <li><a class="dropdown-item" asp-controller="Moderation" asp-action="Index">Moderation</a></li>
-                                        <li><a class="dropdown-item" asp-controller="Categories" asp-action="Manage">Categories</a></li>
-                                        <li><a class="dropdown-item" asp-controller="Tags" asp-action="Manage">Tags</a></li>
-                                        <li><a class="dropdown-item" asp-controller="Dashboard" asp-action="Admin">Admin dashboard</a></li>
-                                    </ul>
-                                </li>
-                            }
                             <li class="nav-item dropdown">
                                 <a class="btn btn-outline-secondary nav-pill-btn dropdown-toggle" href="#" id="notifDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                     Notifications
@@ -76,22 +68,7 @@
                                     <li id="notifDropdownBody" class="px-3 py-2 text-muted">Loading...</li>
                                 </ul>
                             </li>
-                            <li class="nav-item dropdown">
-                                <a class="btn btn-outline-secondary nav-pill-btn dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    Account
-                                </a>
-                                <ul class="dropdown-menu dropdown-menu-end">
-                                    <li><a class="dropdown-item" asp-controller="Profile" asp-action="Index">Profile</a></li>
-                                    <li><a class="dropdown-item" asp-controller="Notifications" asp-action="Index">Notifications</a></li>
-                                    <li><hr class="dropdown-divider" /></li>
-                                    <li>
-                                        <form asp-controller="Account" asp-action="Logout" method="post" class="px-3">
-                                            @Html.AntiForgeryToken()
-                                            <button type="submit" class="btn btn-outline-danger w-100">Logout</button>
-                                        </form>
-                                    </li>
-                                </ul>
-                            </li>
+                            @await Component.InvokeAsync("UserNav")
                         }
                         else
                         {
@@ -100,12 +77,7 @@
                                     <input class="form-control" type="search" name="q" placeholder="Search questions..." aria-label="Search" />
                                 </form>
                             </li>
-                            <li class="nav-item">
-                                <a class="btn btn-outline-secondary nav-pill-btn" asp-controller="Account" asp-action="Login">Log in</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="btn btn-primary nav-pill-btn" asp-controller="Account" asp-action="Register">Sign up</a>
-                            </li>
+                            @await Component.InvokeAsync("UserNav")
                         }
                     </ul>
                 </div>

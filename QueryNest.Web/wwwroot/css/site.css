@@ -191,3 +191,76 @@ body {
 .nav-pill-btn {
   border-radius: 999px;
 }
+
+.nav-icon-btn {
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+}
+
+.nav-icon-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.navbar-search-suggest {
+  position: absolute;
+  top: calc(100% + 0.35rem);
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 0.9rem;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.18);
+  overflow: hidden;
+}
+
+.navbar-search-suggest .suggest-header {
+  padding: 0.6rem 0.9rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #6c757d;
+  background: #f8f9fa;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.navbar-search-suggest .suggest-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.65rem 0.9rem;
+  text-decoration: none;
+  color: #212529;
+}
+
+.navbar-search-suggest .suggest-item:hover {
+  background: rgba(13, 110, 253, 0.06);
+}
+
+.navbar-search-suggest .suggest-item svg {
+  width: 16px;
+  height: 16px;
+  color: #6c757d;
+}
+
+.navbar-search-suggest .suggest-muted {
+  color: #6c757d;
+}
+
+.navbar-user-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  border-radius: 999px;
+}
+
+.navbar-user-btn img {
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  object-fit: cover;
+}

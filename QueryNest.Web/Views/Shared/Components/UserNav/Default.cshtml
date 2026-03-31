@@ -1,0 +1,46 @@
+@model QueryNest.Web.ViewComponents.UserNavViewComponent.UserNavModel
+
+@if (!Model.IsAuthenticated)
+{
+    <li class="nav-item">
+        <a class="btn btn-outline-secondary nav-pill-btn" asp-controller="Account" asp-action="Login">Log in</a>
+    </li>
+    <li class="nav-item">
+        <a class="btn btn-primary nav-pill-btn" asp-controller="Account" asp-action="Register">Sign up</a>
+    </li>
+}
+else
+{
+    @if (Model.IsAdminOrModerator)
+    {
+        <li class="nav-item dropdown">
+            <a class="btn btn-outline-secondary nav-pill-btn dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                Admin
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" asp-controller="Moderation" asp-action="Index">Moderation</a></li>
+                <li><a class="dropdown-item" asp-controller="Categories" asp-action="Manage">Categories</a></li>
+                <li><a class="dropdown-item" asp-controller="Tags" asp-action="Manage">Tags</a></li>
+                <li><a class="dropdown-item" asp-controller="Dashboard" asp-action="Admin">Admin dashboard</a></li>
+            </ul>
+        </li>
+    }
+    <li class="nav-item dropdown">
+        <a class="btn btn-outline-secondary navbar-user-btn dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <img src="@Model.AvatarUrl" alt="Avatar" />
+            <span class="d-none d-lg-inline">@Model.Name</span>
+        </a>
+        <ul class="dropdown-menu dropdown-menu-end">
+            <li><a class="dropdown-item" asp-controller="Profile" asp-action="Index">Profile</a></li>
+            <li><a class="dropdown-item" asp-controller="Dashboard" asp-action="Index">Dashboard</a></li>
+            <li><a class="dropdown-item" asp-controller="Notifications" asp-action="Index">Notifications</a></li>
+            <li><hr class="dropdown-divider" /></li>
+            <li>
+                <form asp-controller="Account" asp-action="Logout" method="post" class="px-3">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-outline-danger w-100">Logout</button>
+                </form>
+            </li>
+        </ul>
+    </li>
+}

@@ -142,3 +142,143 @@
         }
     });
 })();
+
+(() => {
+    const input = document.getElementById("navbarSearchInput");
+    const panel = document.getElementById("navbarSearchSuggest");
+    if (!(input instanceof HTMLInputElement) || !(panel instanceof HTMLElement)) {
+        return;
+    }
+
+    const storageKey = "qn_recent_searches";
+    const maxRecent = 6;
+
+    const readRecent = () => {
+        try {
+            const raw = localStorage.getItem(storageKey);
+            const parsed = raw ? JSON.parse(raw) : [];
+            return Array.isArray(parsed) ? parsed.filter((x) => typeof x === "string") : [];
+        } catch {
+            return [];
+        }
+    };
+
+    const writeRecent = (items) => {
+        try {
+            localStorage.setItem(storageKey, JSON.stringify(items.slice(0, maxRecent)));
+        } catch {
+        }
+    };
+
+    const addRecent = (q) => {
+        const trimmed = (q || "").trim();
+        if (!trimmed) {
+            return;
+        }
+        const items = readRecent().filter((x) => x.toLowerCase() !== trimmed.toLowerCase());
+        items.unshift(trimmed);
+        writeRecent(items);
+    };
+
+    const iconSearch = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85h-.017ZM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0Z"/></svg>`;
+    const iconTag = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor"><path d="M2 2a1 1 0 0 1 1-1h4.586a1 1 0 0 1 .707.293l6.414 6.414a1 1 0 0 1 0 1.414l-4.586 4.586a1 1 0 0 1-1.414 0L2.293 7.293A1 1 0 0 1 2 6.586V2Zm3.5 2.5A1 1 0 1 0 3.5 4.5a1 1 0 0 0 2 0Z"/></svg>`;
+
+    const show = () => panel.classList.remove("d-none");
+    const hide = () => panel.classList.add("d-none");
+
+    const render = (query, recent, tags) => {
+        const q = (query || "").trim();
+        const parts = [];
+
+        if (q) {
+            parts.push(`<div class="suggest-header">Search</div>`);
+            parts.push(`<a class="suggest-item" href="/Questions?q=${encodeURIComponent(q)}">${iconSearch}<span>Search for <strong>${escapeHtml(q)}</strong></span></a>`);
+        }
+
+        if (recent.length) {
+            parts.push(`<div class="suggest-header">Recent</div>`);
+            recent.forEach((r) => {
+                parts.push(`<a class="suggest-item" href="/Questions?q=${encodeURIComponent(r)}">${iconSearch}<span>${escapeHtml(r)}</span></a>`);
+            });
+        }
+
+        if (tags.length) {
+            parts.push(`<div class="suggest-header">Top topics</div>`);
+            tags.forEach((t) => {
+                parts.push(`<a class="suggest-item" href="/Tags/Details/${t.tagId}">${iconTag}<span>${escapeHtml(t.name)}</span><span class="ms-auto suggest-muted small">${escapeHtml(t.slug || "")}</span></a>`);
+            });
+        }
+
+        panel.innerHTML = parts.join("");
+        if (parts.length) {
+            show();
+        } else {
+            hide();
+        }
+    };
+
+    const escapeHtml = (value) => {
+        return String(value)
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll("\"", "&quot;")
+            .replaceAll("'", "&#39;");
+    };
+
+    let lastFetch = 0;
+    let lastQ = "";
+
+    const fetchTags = async (q) => {
+        const now = Date.now();
+        if (now - lastFetch < 200 && q === lastQ) {
+            return [];
+        }
+        lastFetch = now;
+        lastQ = q;
+        try {
+            const res = await fetch(`/Tags/Suggest?q=${encodeURIComponent(q)}`, { credentials: "same-origin" });
+            if (!res.ok) {
+                return [];
+            }
+            const data = await res.json();
+            return Array.isArray(data) ? data : [];
+        } catch {
+            return [];
+        }
+    };
+
+    const refresh = async () => {
+        const q = input.value || "";
+        const recent = readRecent().filter((x) => x.toLowerCase().includes(q.trim().toLowerCase())).slice(0, maxRecent);
+        const tags = await fetchTags(q.trim());
+        render(q, recent, tags);
+    };
+
+    input.addEventListener("focus", () => {
+        refresh();
+    });
+
+    input.addEventListener("input", () => {
+        refresh();
+    });
+
+    document.addEventListener("click", (e) => {
+        const target = e.target;
+        if (!(target instanceof Element)) {
+            return;
+        }
+        if (target === input || panel.contains(target)) {
+            return;
+        }
+        hide();
+    });
+
+    const form = input.closest("form");
+    if (form) {
+        form.addEventListener("submit", () => {
+            addRecent(input.value);
+            hide();
+        });
+    }
+})();
