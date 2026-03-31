@@ -7,6 +7,7 @@ public class QuestionDetailsViewModel
     public string Description { get; set; } = default!;
     public string CategoryName { get; set; } = default!;
     public string AuthorName { get; set; } = default!;
+    public string? AuthorAvatarPath { get; set; }
     public int ViewCount { get; set; }
     public int Score { get; set; }
     public DateTime CreatedAt { get; set; }

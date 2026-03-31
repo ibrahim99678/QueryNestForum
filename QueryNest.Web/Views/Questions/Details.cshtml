@@ -2,6 +2,10 @@
 
 @{
     ViewData["Title"] = Model.Title;
+    var defaultAvatar = Url.Content("~/images/default-avatar.svg");
+    var questionAvatar = string.IsNullOrWhiteSpace(Model.AuthorAvatarPath)
+        ? defaultAvatar
+        : (Model.AuthorAvatarPath.StartsWith("/") ? Model.AuthorAvatarPath : "/" + Model.AuthorAvatarPath);
 }
 
 <div class="mb-3">
@@ -10,7 +14,10 @@
             <h2 class="mb-1">@Model.Title</h2>
             <div class="d-flex gap-2 flex-wrap align-items-center">
                 <span class="badge bg-light text-dark border">@Model.CategoryName</span>
-                <span class="text-muted">by @Model.AuthorName</span>
+                <span class="text-muted d-flex align-items-center gap-2">
+                    <img src="@questionAvatar" alt="Avatar" width="24" height="24" class="rounded-circle border" />
+                    <span>by @Model.AuthorName</span>
+                </span>
                 <span class="text-muted">•</span>
                 <span class="text-muted">@Model.ViewCount views</span>
                 <span class="text-muted">•</span>
@@ -68,7 +75,7 @@
 
 <div class="card">
     <div class="card-body">
-        <div style="white-space: pre-wrap;">@Model.Description</div>
+        <div class="md-content" style="white-space: normal;">@Html.Raw(MarkdownLite.ToHtml(Model.Description))</div>
     </div>
 </div>
 
@@ -136,10 +143,15 @@
     {
         foreach (var answer in Model.Answers)
         {
+            var answerAvatar = string.IsNullOrWhiteSpace(answer.AuthorAvatarPath)
+                ? defaultAvatar
+                : (answer.AuthorAvatarPath.StartsWith("/") ? answer.AuthorAvatarPath : "/" + answer.AuthorAvatarPath);
+
             <div class="card mb-3">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start gap-3 mb-2">
-                        <div class="text-muted small">
+                        <div class="text-muted small d-flex align-items-center gap-2">
+                            <img src="@answerAvatar" alt="Avatar" width="24" height="24" class="rounded-circle border" />
                             <span>@answer.AuthorName</span>
                             <span>•</span>
                             <span>@answer.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</span>
@@ -175,7 +187,7 @@
                             }
                         </div>
                     </div>
-                    <div style="white-space: pre-wrap;">@answer.Content</div>
+                    <div class="md-content" style="white-space: normal;">@Html.Raw(MarkdownLite.ToHtml(answer.Content))</div>
 
                     <hr class="my-3" />
 

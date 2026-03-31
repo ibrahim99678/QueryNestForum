@@ -5,11 +5,16 @@
     var questionId = (int)ViewData["QuestionId"]!;
     var canReply = ViewData["CanReply"] as bool? ?? false;
     var canVote = ViewData["CanVote"] as bool? ?? false;
+    var defaultAvatar = Url.Content("~/images/default-avatar.svg");
+    var avatarUrl = string.IsNullOrWhiteSpace(Model.AuthorAvatarPath)
+        ? defaultAvatar
+        : (Model.AuthorAvatarPath.StartsWith("/") ? Model.AuthorAvatarPath : "/" + Model.AuthorAvatarPath);
 }
 
 <div class="border rounded p-2 mb-2">
     <div class="d-flex justify-content-between">
-        <div class="text-muted small">
+        <div class="text-muted small d-flex align-items-center gap-2">
+            <img src="@avatarUrl" alt="Avatar" width="22" height="22" class="rounded-circle border" />
             <span>@Model.AuthorName</span>
             <span>•</span>
             <span>@Model.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</span>
@@ -60,7 +65,7 @@
             </form>
         }
     </div>
-    <div class="mt-1" style="white-space: pre-wrap;">@Model.Content</div>
+    <div class="mt-1 md-content" style="white-space: normal;">@Html.Raw(MarkdownLite.ToHtml(Model.Content))</div>
 
     @if (canReply)
     {

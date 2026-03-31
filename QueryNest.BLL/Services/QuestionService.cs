@@ -163,6 +163,7 @@ public class QuestionService : IQuestionService
             Description = question.Description,
             CategoryName = question.Category.Name,
             AuthorName = question.User.Name,
+            AuthorAvatarPath = question.User.AvatarPath,
             AuthorUserId = question.UserId,
             ViewCount = question.ViewCount,
             Score = question.Votes.Select(v => (int)v.VoteType).DefaultIfEmpty(0).Sum(),
@@ -178,6 +179,7 @@ public class QuestionService : IQuestionService
                     AnswerId = a.AnswerId,
                     AuthorUserId = a.UserId,
                     AuthorName = a.User.Name,
+                    AuthorAvatarPath = a.User.AvatarPath,
                     Content = a.Content,
                     Score = a.Votes.Select(v => (int)v.VoteType).DefaultIfEmpty(0).Sum(),
                     CreatedAt = a.CreatedAt,
@@ -461,6 +463,7 @@ public class QuestionService : IQuestionService
                     ParentCommentId = c.ParentCommentId,
                     AuthorUserId = c.UserId,
                     AuthorName = c.User.Name,
+                    AuthorAvatarPath = c.User.AvatarPath,
                     Content = c.Content,
                     Score = c.Votes.Select(v => (int)v.VoteType).DefaultIfEmpty(0).Sum(),
                     CreatedAt = c.CreatedAt

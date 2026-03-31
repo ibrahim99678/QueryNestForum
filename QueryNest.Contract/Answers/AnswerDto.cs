@@ -7,6 +7,7 @@ public class AnswerDto
     public int AnswerId { get; init; }
     public int AuthorUserId { get; init; }
     public string AuthorName { get; init; } = default!;
+    public string? AuthorAvatarPath { get; init; }
     public string Content { get; init; } = default!;
     public int Score { get; init; }
     public DateTime CreatedAt { get; init; }

@@ -105,6 +105,7 @@ public class QuestionsController : Controller
             Description = dto.Description,
             CategoryName = dto.CategoryName,
             AuthorName = dto.AuthorName,
+            AuthorAvatarPath = dto.AuthorAvatarPath,
             ViewCount = dto.ViewCount,
             Score = dto.Score,
             CreatedAt = dto.CreatedAt,
@@ -116,6 +117,7 @@ public class QuestionsController : Controller
             {
                 AnswerId = a.AnswerId,
                 AuthorName = a.AuthorName,
+                AuthorAvatarPath = a.AuthorAvatarPath,
                 Content = a.Content,
                 Score = a.Score,
                 CreatedAt = a.CreatedAt,
@@ -136,6 +138,7 @@ public class QuestionsController : Controller
             CommentId = dto.CommentId,
             ParentCommentId = dto.ParentCommentId,
             AuthorName = dto.AuthorName,
+            AuthorAvatarPath = dto.AuthorAvatarPath,
             Content = dto.Content,
             Score = dto.Score,
             CreatedAt = dto.CreatedAt,

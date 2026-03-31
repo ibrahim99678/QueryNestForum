@@ -10,6 +10,7 @@ public class QuestionDetailsDto
     public string Description { get; init; } = default!;
     public string CategoryName { get; init; } = default!;
     public string AuthorName { get; init; } = default!;
+    public string? AuthorAvatarPath { get; init; }
     public int AuthorUserId { get; init; }
     public int ViewCount { get; init; }
     public int Score { get; init; }

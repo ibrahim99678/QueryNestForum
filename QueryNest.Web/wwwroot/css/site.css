@@ -20,3 +20,174 @@ html {
 body {
   margin-bottom: 60px;
 }
+
+.auth-shell {
+  min-height: calc(100vh - 60px);
+  background:
+    radial-gradient(1200px 600px at 10% 10%, rgba(37, 140, 251, 0.18), transparent 60%),
+    radial-gradient(900px 500px at 90% 20%, rgba(111, 66, 193, 0.18), transparent 55%),
+    radial-gradient(800px 500px at 50% 100%, rgba(25, 135, 84, 0.14), transparent 60%),
+    linear-gradient(180deg, #0b1220 0%, #0e1a2e 60%, #0b1220 100%);
+}
+
+.auth-card {
+  border: 0;
+  border-radius: 1.25rem;
+  overflow: hidden;
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.35);
+}
+
+.auth-left {
+  color: #f8f9fa;
+  background:
+    radial-gradient(800px 420px at 30% 20%, rgba(37, 140, 251, 0.35), transparent 60%),
+    radial-gradient(600px 360px at 70% 70%, rgba(111, 66, 193, 0.35), transparent 60%),
+    linear-gradient(135deg, rgba(33, 37, 41, 0.6), rgba(33, 37, 41, 0.2));
+}
+
+.auth-brand {
+  letter-spacing: 0.2px;
+}
+
+.auth-subtitle {
+  color: rgba(248, 249, 250, 0.8);
+}
+
+.auth-form {
+  background: #ffffff;
+}
+
+.auth-form .form-control {
+  border-radius: 0.75rem;
+}
+
+.auth-form .btn {
+  border-radius: 0.75rem;
+}
+
+.auth-form .form-check-input {
+  border-radius: 0.35rem;
+}
+
+.auth-input {
+  position: relative;
+}
+
+.auth-input .form-control {
+  padding-left: 2.75rem;
+  padding-right: 3rem;
+}
+
+.auth-input-icon {
+  position: absolute;
+  left: 0.9rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1.1rem;
+  height: 1.1rem;
+  color: #6c757d;
+  pointer-events: none;
+}
+
+.auth-toggle {
+  position: absolute;
+  right: 0.65rem;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #6c757d;
+}
+
+.auth-toggle:hover {
+  color: #212529;
+}
+
+.md-code {
+  background: #0b1220;
+  color: #f8f9fa;
+  padding: 0.75rem 0.9rem;
+  border-radius: 0.75rem;
+  overflow-x: auto;
+}
+
+.md-inline {
+  background: rgba(13, 110, 253, 0.12);
+  color: #0b2a63;
+  padding: 0.1rem 0.3rem;
+  border-radius: 0.4rem;
+}
+
+.md-quote {
+  border-left: 4px solid rgba(13, 110, 253, 0.35);
+  padding-left: 0.75rem;
+  margin: 0.25rem 0;
+  color: #495057;
+}
+
+.md-toolbar .btn {
+  border-radius: 0.6rem;
+}
+
+.app-navbar {
+  position: sticky;
+  top: 0;
+  z-index: 1030;
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.9);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.app-navbar .navbar-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+
+.app-navbar .brand-mark {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: #f8f9fa;
+}
+
+.navbar-search {
+  position: relative;
+  flex: 1;
+  max-width: 680px;
+}
+
+.navbar-search .form-control {
+  border-radius: 999px;
+  padding-left: 2.6rem;
+  background: #f8f9fa;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.navbar-search .form-control:focus {
+  background: #ffffff;
+}
+
+.navbar-search .search-icon {
+  position: absolute;
+  left: 0.95rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1.05rem;
+  height: 1.05rem;
+  color: #6c757d;
+  pointer-events: none;
+}
+
+.nav-pill-btn {
+  border-radius: 999px;
+}

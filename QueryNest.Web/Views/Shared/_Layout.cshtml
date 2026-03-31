@@ -10,48 +10,65 @@
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+        <nav class="navbar app-navbar navbar-expand-lg">
             <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">QueryNest.Web</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                <a class="navbar-brand" asp-area="" asp-controller="Questions" asp-action="Index">
+                    <img src="~/images/default-avatar.svg" alt="QueryNest" class="brand-mark" />
+                    <span>QueryNest</span>
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#appNavbar" aria-controls="appNavbar"
                         aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
+                <div class="collapse navbar-collapse" id="appNavbar">
+                    <ul class="navbar-nav me-3">
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Questions" asp-action="Index">Questions</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Tags" asp-action="Index">Tags</a>
-                        </li>
-                        @if (User.Identity?.IsAuthenticated == true)
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Questions" asp-action="Create">Ask</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Dashboard" asp-action="Index">Dashboard</a>
-                            </li>
-                        }
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Tags" asp-action="Index">Topics</a>
                         </li>
                     </ul>
-                    <ul class="navbar-nav">
+
+                    <form class="navbar-search d-none d-lg-block me-lg-3" method="get" asp-controller="Questions" asp-action="Index">
+                        <span class="search-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor">
+                                <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85h-.017ZM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0Z"/>
+                            </svg>
+                        </span>
+                        <input class="form-control" type="search" name="q" placeholder="Search questions..." aria-label="Search" />
+                    </form>
+
+                    <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-2">
                         @if (User.Identity?.IsAuthenticated == true)
                         {
+                            <li class="nav-item d-lg-none">
+                                <form class="px-2" method="get" asp-controller="Questions" asp-action="Index">
+                                    <input class="form-control" type="search" name="q" placeholder="Search questions..." aria-label="Search" />
+                                </form>
+                            </li>
+                            <li class="nav-item">
+                                <a class="btn btn-primary nav-pill-btn" asp-area="" asp-controller="Questions" asp-action="Create">Ask</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="btn btn-outline-secondary nav-pill-btn" asp-area="" asp-controller="Dashboard" asp-action="Index">Dashboard</a>
+                            </li>
                             @if (User.IsInRole("Admin") || User.IsInRole("Moderator"))
                             {
-                                <li class="nav-item">
-                                    <a class="nav-link text-dark" asp-controller="Moderation" asp-action="Index">Moderation</a>
+                                <li class="nav-item dropdown">
+                                    <a class="btn btn-outline-secondary nav-pill-btn dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        Admin
+                                    </a>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li><a class="dropdown-item" asp-controller="Moderation" asp-action="Index">Moderation</a></li>
+                                        <li><a class="dropdown-item" asp-controller="Categories" asp-action="Manage">Categories</a></li>
+                                        <li><a class="dropdown-item" asp-controller="Tags" asp-action="Manage">Tags</a></li>
+                                        <li><a class="dropdown-item" asp-controller="Dashboard" asp-action="Admin">Admin dashboard</a></li>
+                                    </ul>
                                 </li>
                             }
                             <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle text-dark" href="#" id="notifDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <a class="btn btn-outline-secondary nav-pill-btn dropdown-toggle" href="#" id="notifDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                     Notifications
                                     <span id="notifCountBadge" class="badge bg-danger ms-1 d-none"></span>
                                 </a>
@@ -59,23 +76,35 @@
                                     <li id="notifDropdownBody" class="px-3 py-2 text-muted">Loading...</li>
                                 </ul>
                             </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="Profile" asp-action="Index">Profile</a>
-                            </li>
-                            <li class="nav-item">
-                                <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
-                                    @Html.AntiForgeryToken()
-                                    <button type="submit" class="nav-link btn btn-link text-dark p-0">Logout</button>
-                                </form>
+                            <li class="nav-item dropdown">
+                                <a class="btn btn-outline-secondary nav-pill-btn dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Account
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li><a class="dropdown-item" asp-controller="Profile" asp-action="Index">Profile</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Notifications" asp-action="Index">Notifications</a></li>
+                                    <li><hr class="dropdown-divider" /></li>
+                                    <li>
+                                        <form asp-controller="Account" asp-action="Logout" method="post" class="px-3">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-outline-danger w-100">Logout</button>
+                                        </form>
+                                    </li>
+                                </ul>
                             </li>
                         }
                         else
                         {
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="Account" asp-action="Login">Login</a>
+                            <li class="nav-item d-lg-none">
+                                <form class="px-2" method="get" asp-controller="Questions" asp-action="Index">
+                                    <input class="form-control" type="search" name="q" placeholder="Search questions..." aria-label="Search" />
+                                </form>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="Account" asp-action="Register">Register</a>
+                                <a class="btn btn-outline-secondary nav-pill-btn" asp-controller="Account" asp-action="Login">Log in</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="btn btn-primary nav-pill-btn" asp-controller="Account" asp-action="Register">Sign up</a>
                             </li>
                         }
                     </ul>
