@@ -8,4 +8,5 @@ public class Tag
     public DateTime CreatedAt { get; set; }
 
     public ICollection<QuestionTag> QuestionTags { get; set; } = new List<QuestionTag>();
+    public ICollection<TagFollow> Followers { get; set; } = new List<TagFollow>();
 }

@@ -1,0 +1,83 @@
+@model List<QueryNest.Web.Models.Reports.ReportListItemViewModel>
+
+@{
+    ViewData["Title"] = "Moderation";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0">Pending reports</h2>
+</div>
+
+@if (Model.Count == 0)
+{
+    <div class="alert alert-info">No pending reports.</div>
+}
+else
+{
+    <div class="list-group">
+        @foreach (var r in Model)
+        {
+            <div class="list-group-item">
+                <div class="d-flex justify-content-between align-items-start gap-3">
+                    <div class="flex-grow-1">
+                        <div class="d-flex gap-2 flex-wrap align-items-center mb-1">
+                            <span class="badge bg-secondary">@r.TargetType</span>
+                            <span class="text-muted small">@r.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</span>
+                        </div>
+                        <div><strong>Reason:</strong> @r.Reason</div>
+                        @if (!string.IsNullOrWhiteSpace(r.Details))
+                        {
+                            <div class="text-muted"><strong>Details:</strong> @r.Details</div>
+                        }
+                        <div class="text-muted small mt-1">
+                            <span>Reporter: @r.ReporterName</span>
+                            <span>•</span>
+                            <span>Owner: @r.ContentOwnerName (UserId: @r.ContentOwnerUserId)</span>
+                        </div>
+                        @if (!string.IsNullOrWhiteSpace(r.ContentPreview))
+                        {
+                            <div class="mt-2 text-muted" style="white-space: pre-wrap;">@r.ContentPreview</div>
+                        }
+                    </div>
+                    <div class="d-flex flex-column gap-2" style="min-width: 170px;">
+                        @if (r.QuestionId is not null)
+                        {
+                            <a class="btn btn-sm btn-outline-primary" asp-controller="Questions" asp-action="Details" asp-route-id="@r.QuestionId">Open</a>
+                        }
+
+                        <form asp-action="Review" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="reportId" value="@r.ReportId" />
+                            <input type="hidden" name="approve" value="true" />
+                            <input type="text" name="reviewNote" class="form-control form-control-sm mb-2" placeholder="Review note (optional)" />
+                            <button type="submit" class="btn btn-sm btn-success w-100">Approve</button>
+                        </form>
+
+                        <form asp-action="Review" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="reportId" value="@r.ReportId" />
+                            <input type="hidden" name="approve" value="false" />
+                            <input type="text" name="reviewNote" class="form-control form-control-sm mb-2" placeholder="Review note (optional)" />
+                            <button type="submit" class="btn btn-sm btn-outline-secondary w-100">Reject</button>
+                        </form>
+
+                        <form asp-action="Ban" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="userId" value="@r.ContentOwnerUserId" />
+                            <div class="input-group input-group-sm">
+                                <input type="number" name="days" class="form-control" value="7" min="1" max="3650" />
+                                <button type="submit" class="btn btn-outline-danger">Ban</button>
+                            </div>
+                        </form>
+
+                        <form asp-action="Unban" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="userId" value="@r.ContentOwnerUserId" />
+                            <button type="submit" class="btn btn-sm btn-outline-danger w-100">Unban</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}

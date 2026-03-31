@@ -15,4 +15,5 @@ public class UserProfile
     public ICollection<Answer> Answers { get; set; } = new List<Answer>();
     public ICollection<Comment> Comments { get; set; } = new List<Comment>();
     public ICollection<Vote> Votes { get; set; } = new List<Vote>();
+    public ICollection<TagFollow> TagFollows { get; set; } = new List<TagFollow>();
 }

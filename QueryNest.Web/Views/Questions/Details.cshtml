@@ -76,6 +76,36 @@
 {
     <div class="alert alert-danger mt-3">@errorMessage</div>
 }
+@if (TempData["ReportMessage"] is string reportMessage && !string.IsNullOrWhiteSpace(reportMessage))
+{
+    <div class="alert alert-info mt-3">@reportMessage</div>
+}
+
+@if (User.Identity?.IsAuthenticated == true)
+{
+    <div class="card mt-3">
+        <div class="card-body">
+            <h5 class="card-title mb-2">Report this question</h5>
+            <form asp-controller="Reports" asp-action="Create" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="TargetType" value="1" />
+                <input type="hidden" name="TargetId" value="@Model.QuestionId" />
+                <input type="hidden" name="ReturnQuestionId" value="@Model.QuestionId" />
+                <div class="row g-2">
+                    <div class="col-md-4">
+                        <input type="text" name="Reason" class="form-control" placeholder="Reason" required minlength="3" maxlength="200" />
+                    </div>
+                    <div class="col-md-6">
+                        <input type="text" name="Details" class="form-control" placeholder="Details (optional)" maxlength="1000" />
+                    </div>
+                    <div class="col-md-2 d-grid">
+                        <button type="submit" class="btn btn-outline-danger">Report</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+}
 
 <div class="mt-4">
     <h4 class="mb-3">Answers</h4>
@@ -133,6 +163,14 @@
                                     <input type="hidden" name="TargetId" value="@answer.AnswerId" />
                                     <input type="hidden" name="VoteType" value="-1" />
                                     <button type="submit" class="btn btn-sm btn-outline-danger">Downvote</button>
+                                </form>
+                                <form asp-controller="Reports" asp-action="Create" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="TargetType" value="2" />
+                                    <input type="hidden" name="TargetId" value="@answer.AnswerId" />
+                                    <input type="hidden" name="ReturnQuestionId" value="@Model.QuestionId" />
+                                    <input type="hidden" name="Reason" value="Inappropriate" />
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Report</button>
                                 </form>
                             }
                         </div>

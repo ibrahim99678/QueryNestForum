@@ -1,0 +1,172 @@
+@model QueryNest.Web.Models.Dashboard.AdminDashboardViewModel
+
+@{
+    ViewData["Title"] = "Admin dashboard";
+    var maxQ = Model.QuestionsLast14Days.Count == 0 ? 0 : Model.QuestionsLast14Days.Max(x => x.Count);
+    var maxA = Model.AnswersLast14Days.Count == 0 ? 0 : Model.AnswersLast14Days.Max(x => x.Count);
+    var maxC = Model.CommentsLast14Days.Count == 0 ? 0 : Model.CommentsLast14Days.Max(x => x.Count);
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0">Admin dashboard</h2>
+    <a class="btn btn-outline-secondary" asp-controller="Dashboard" asp-action="Index">User dashboard</a>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-2">
+        <div class="card"><div class="card-body"><div class="text-muted">Users</div><div class="h4 mb-0">@Model.TotalUsers</div></div></div>
+    </div>
+    <div class="col-md-2">
+        <div class="card"><div class="card-body"><div class="text-muted">Questions</div><div class="h4 mb-0">@Model.TotalQuestions</div></div></div>
+    </div>
+    <div class="col-md-2">
+        <div class="card"><div class="card-body"><div class="text-muted">Answers</div><div class="h4 mb-0">@Model.TotalAnswers</div></div></div>
+    </div>
+    <div class="col-md-2">
+        <div class="card"><div class="card-body"><div class="text-muted">Comments</div><div class="h4 mb-0">@Model.TotalComments</div></div></div>
+    </div>
+    <div class="col-md-2">
+        <div class="card"><div class="card-body"><div class="text-muted">Tags</div><div class="h4 mb-0">@Model.TotalTags</div></div></div>
+    </div>
+    <div class="col-md-2">
+        <div class="card"><div class="card-body"><div class="text-muted">Pending reports</div><div class="h4 mb-0">@Model.PendingReports</div></div></div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Questions (last 14 days)</h5>
+                @foreach (var d in Model.QuestionsLast14Days)
+                {
+                    var pct = maxQ == 0 ? 0 : (int)Math.Round(d.Count * 100.0 / maxQ);
+                    <div class="mb-2">
+                        <div class="d-flex justify-content-between small text-muted">
+                            <span>@d.Date.ToLocalTime().ToString("MM-dd")</span>
+                            <span>@d.Count</span>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar" role="progressbar" style="width: @pct%"></div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Answers (last 14 days)</h5>
+                @foreach (var d in Model.AnswersLast14Days)
+                {
+                    var pct = maxA == 0 ? 0 : (int)Math.Round(d.Count * 100.0 / maxA);
+                    <div class="mb-2">
+                        <div class="d-flex justify-content-between small text-muted">
+                            <span>@d.Date.ToLocalTime().ToString("MM-dd")</span>
+                            <span>@d.Count</span>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: @pct%"></div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Comments (last 14 days)</h5>
+                @foreach (var d in Model.CommentsLast14Days)
+                {
+                    var pct = maxC == 0 ? 0 : (int)Math.Round(d.Count * 100.0 / maxC);
+                    <div class="mb-2">
+                        <div class="d-flex justify-content-between small text-muted">
+                            <span>@d.Date.ToLocalTime().ToString("MM-dd")</span>
+                            <span>@d.Count</span>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-secondary" role="progressbar" style="width: @pct%"></div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Top tags</h5>
+                @if (Model.TopTags.Count == 0)
+                {
+                    <div class="text-muted">No tags.</div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Tag</th>
+                                    <th class="text-end">Questions</th>
+                                    <th class="text-end">Followers</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var t in Model.TopTags)
+                                {
+                                    <tr>
+                                        <td><a asp-controller="Tags" asp-action="Details" asp-route-id="@t.TagId">@t.Name</a></td>
+                                        <td class="text-end">@t.QuestionCount</td>
+                                        <td class="text-end">@t.FollowerCount</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Top users</h5>
+                @if (Model.TopUsers.Count == 0)
+                {
+                    <div class="text-muted">No users.</div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle">
+                            <thead>
+                                <tr>
+                                    <th>User</th>
+                                    <th class="text-end">Reputation</th>
+                                    <th class="text-end">Questions</th>
+                                    <th class="text-end">Answers</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var u in Model.TopUsers)
+                                {
+                                    <tr>
+                                        <td>@u.Name</td>
+                                        <td class="text-end">@u.Reputation</td>
+                                        <td class="text-end">@u.Questions</td>
+                                        <td class="text-end">@u.Answers</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

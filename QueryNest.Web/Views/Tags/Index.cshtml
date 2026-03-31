@@ -1,0 +1,79 @@
+@model QueryNest.Web.Models.Tags.TagIndexViewModel
+
+@{
+    ViewData["Title"] = "Tags";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0">Tags</h2>
+    @if (Model.CanManage)
+    {
+        <a class="btn btn-outline-secondary" asp-controller="Tags" asp-action="Manage">Manage</a>
+    }
+</div>
+
+<form method="get" asp-controller="Tags" asp-action="Index" class="mb-3">
+    <div class="input-group">
+        <input type="text" name="q" value="@Model.Query" class="form-control" placeholder="Search tags..." />
+        <button type="submit" class="btn btn-outline-primary">Search</button>
+        <a class="btn btn-outline-secondary" asp-controller="Tags" asp-action="Index">Reset</a>
+    </div>
+</form>
+
+@if (Model.IsAuthenticated && Model.FollowedTags.Count > 0)
+{
+    <div class="card mb-3">
+        <div class="card-body">
+            <h5 class="card-title">Followed topics</h5>
+            <div class="d-flex flex-wrap gap-2">
+                @foreach (var t in Model.FollowedTags)
+                {
+                    <a class="btn btn-sm btn-outline-primary" asp-controller="Tags" asp-action="Details" asp-route-id="@t.TagId">
+                        @t.Name
+                        <span class="badge bg-light text-dark border ms-1">@t.QuestionCount</span>
+                    </a>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+@if (Model.Tags.Count == 0)
+{
+    <div class="alert alert-info">No tags found.</div>
+}
+else
+{
+    <div class="row g-3">
+        @foreach (var t in Model.Tags)
+        {
+            <div class="col-md-4 col-lg-3">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start gap-2">
+                            <a class="text-decoration-none" asp-controller="Tags" asp-action="Details" asp-route-id="@t.TagId">
+                                <h5 class="card-title mb-1">@t.Name</h5>
+                            </a>
+                            @if (Model.IsAuthenticated)
+                            {
+                                <form asp-controller="Tags" asp-action="ToggleFollow" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@t.TagId" />
+                                    <input type="hidden" name="returnUrl" value="@Context.Request.Path@Context.Request.QueryString" />
+                                    <button type="submit" class="btn btn-sm @(t.IsFollowed ? "btn-primary" : "btn-outline-primary")">
+                                        @(t.IsFollowed ? "Following" : "Follow")
+                                    </button>
+                                </form>
+                            }
+                        </div>
+                        <div class="text-muted small">@t.Slug</div>
+                        <div class="mt-2 d-flex gap-2 flex-wrap">
+                            <span class="badge bg-light text-dark border">@t.QuestionCount questions</span>
+                            <span class="badge bg-light text-dark border">@t.FollowerCount followers</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}

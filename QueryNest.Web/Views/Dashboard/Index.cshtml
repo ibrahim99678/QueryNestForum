@@ -1,0 +1,142 @@
+@model QueryNest.Web.Models.Dashboard.UserDashboardViewModel
+
+@{
+    ViewData["Title"] = "Dashboard";
+    var maxQuestions = Model.MyQuestionsLast14Days.Count == 0 ? 0 : Model.MyQuestionsLast14Days.Max(x => x.Count);
+    var maxAnswers = Model.MyAnswersLast14Days.Count == 0 ? 0 : Model.MyAnswersLast14Days.Max(x => x.Count);
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0">Dashboard</h2>
+    @if (Model.CanViewAdmin)
+    {
+        <a class="btn btn-outline-secondary" asp-controller="Dashboard" asp-action="Admin">Admin dashboard</a>
+    }
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <div class="text-muted">User</div>
+                <div class="h4 mb-0">@Model.Name</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <div class="text-muted">Reputation</div>
+                <div class="h4 mb-0">@Model.Reputation</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <div class="text-muted">Unread notifications</div>
+                <div class="h4 mb-0">@Model.UnreadNotifications</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <div class="text-muted">Followed topics</div>
+                <div class="h4 mb-0">@Model.FollowedTags</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <div class="text-muted">My questions</div>
+                <div class="h4 mb-0">@Model.MyQuestions</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <div class="text-muted">My answers</div>
+                <div class="h4 mb-0">@Model.MyAnswers</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <div class="text-muted">My comments</div>
+                <div class="h4 mb-0">@Model.MyComments</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <div class="text-muted">Votes received</div>
+                <div class="h4 mb-0">@Model.VotesReceived</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">My questions (last 14 days)</h5>
+                @if (Model.MyQuestionsLast14Days.Count == 0)
+                {
+                    <div class="text-muted">No data.</div>
+                }
+                else
+                {
+                    foreach (var d in Model.MyQuestionsLast14Days)
+                    {
+                        var pct = maxQuestions == 0 ? 0 : (int)Math.Round(d.Count * 100.0 / maxQuestions);
+                        <div class="mb-2">
+                            <div class="d-flex justify-content-between small text-muted">
+                                <span>@d.Date.ToLocalTime().ToString("MM-dd")</span>
+                                <span>@d.Count</span>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar" role="progressbar" style="width: @pct%"></div>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">My answers (last 14 days)</h5>
+                @if (Model.MyAnswersLast14Days.Count == 0)
+                {
+                    <div class="text-muted">No data.</div>
+                }
+                else
+                {
+                    foreach (var d in Model.MyAnswersLast14Days)
+                    {
+                        var pct = maxAnswers == 0 ? 0 : (int)Math.Round(d.Count * 100.0 / maxAnswers);
+                        <div class="mb-2">
+                            <div class="d-flex justify-content-between small text-muted">
+                                <span>@d.Date.ToLocalTime().ToString("MM-dd")</span>
+                                <span>@d.Count</span>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-success" role="progressbar" style="width: @pct%"></div>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+</div>

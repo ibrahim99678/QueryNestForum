@@ -48,6 +48,17 @@
                 <button type="submit" class="btn btn-sm btn-outline-danger">Downvote</button>
             </form>
         }
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+            <form asp-controller="Reports" asp-action="Create" method="post" class="d-inline">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="TargetType" value="3" />
+                <input type="hidden" name="TargetId" value="@Model.CommentId" />
+                <input type="hidden" name="ReturnQuestionId" value="@questionId" />
+                <input type="hidden" name="Reason" value="Inappropriate" />
+                <button type="submit" class="btn btn-sm btn-outline-danger">Report</button>
+            </form>
+        }
     </div>
     <div class="mt-1" style="white-space: pre-wrap;">@Model.Content</div>
 

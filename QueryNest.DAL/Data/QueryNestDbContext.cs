@@ -20,6 +20,8 @@ public class QueryNestDbContext : IdentityDbContext<IdentityUser>
     public DbSet<Comment> Comments => Set<Comment>();
     public DbSet<Vote> Votes => Set<Vote>();
     public DbSet<Notification> Notifications => Set<Notification>();
+    public DbSet<Report> Reports => Set<Report>();
+    public DbSet<TagFollow> TagFollows => Set<TagFollow>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -243,6 +245,89 @@ public class QueryNestDbContext : IdentityDbContext<IdentityUser>
                 .WithMany()
                 .HasForeignKey(x => x.CommentId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<Report>(entity =>
+        {
+            entity.ToTable("Reports");
+            entity.HasKey(x => x.ReportId);
+
+            entity.Property(x => x.TargetType).HasConversion<int>().IsRequired();
+            entity.Property(x => x.Status).HasConversion<int>().IsRequired();
+            entity.Property(x => x.Reason).HasMaxLength(200).IsRequired();
+            entity.Property(x => x.Details).HasMaxLength(1000);
+            entity.Property(x => x.ReviewNote).HasMaxLength(1000);
+            entity.Property(x => x.CreatedAt).HasPrecision(3);
+            entity.Property(x => x.ReviewedAt).HasPrecision(3);
+
+            entity.HasIndex(x => new { x.Status, x.CreatedAt });
+
+            entity.HasOne(x => x.Reporter)
+                .WithMany()
+                .HasForeignKey(x => x.ReporterUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(x => x.ReviewedBy)
+                .WithMany()
+                .HasForeignKey(x => x.ReviewedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(x => x.Question)
+                .WithMany()
+                .HasForeignKey(x => x.QuestionId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(x => x.Answer)
+                .WithMany()
+                .HasForeignKey(x => x.AnswerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(x => x.Comment)
+                .WithMany()
+                .HasForeignKey(x => x.CommentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.ToTable(t =>
+            {
+                t.HasCheckConstraint(
+                    "CK_Reports_ExactlyOneTarget",
+                    "([QuestionId] IS NOT NULL AND [AnswerId] IS NULL AND [CommentId] IS NULL) OR " +
+                    "([QuestionId] IS NULL AND [AnswerId] IS NOT NULL AND [CommentId] IS NULL) OR " +
+                    "([QuestionId] IS NULL AND [AnswerId] IS NULL AND [CommentId] IS NOT NULL)"
+                );
+            });
+
+            entity.HasIndex(x => new { x.ReporterUserId, x.QuestionId })
+                .IsUnique()
+                .HasFilter("[QuestionId] IS NOT NULL AND [Status] = 1");
+
+            entity.HasIndex(x => new { x.ReporterUserId, x.AnswerId })
+                .IsUnique()
+                .HasFilter("[AnswerId] IS NOT NULL AND [Status] = 1");
+
+            entity.HasIndex(x => new { x.ReporterUserId, x.CommentId })
+                .IsUnique()
+                .HasFilter("[CommentId] IS NOT NULL AND [Status] = 1");
+        });
+
+        builder.Entity<TagFollow>(entity =>
+        {
+            entity.ToTable("TagFollows");
+            entity.HasKey(x => new { x.UserId, x.TagId });
+
+            entity.Property(x => x.CreatedAt).HasPrecision(3);
+
+            entity.HasOne(x => x.User)
+                .WithMany(x => x.TagFollows)
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(x => x.Tag)
+                .WithMany(x => x.Followers)
+                .HasForeignKey(x => x.TagId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(x => x.TagId);
         });
     }
 }
