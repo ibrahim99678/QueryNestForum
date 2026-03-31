@@ -55,9 +55,8 @@ public class DashboardService : IDashboardService
             .Join(_unitOfWork.Questions.Query().AsNoTracking().Where(q => q.UserId == userId),
                 v => v.QuestionId!.Value,
                 q => q.QuestionId,
-                (v, q) => (int)v.VoteType)
-            .DefaultIfEmpty(0)
-            .SumAsync(cancellationToken);
+                (v, q) => (int?)v.VoteType)
+            .SumAsync(cancellationToken) ?? 0;
 
         var answerVoteSum = await _unitOfWork.Votes.Query()
             .AsNoTracking()
@@ -65,9 +64,8 @@ public class DashboardService : IDashboardService
             .Join(_unitOfWork.Answers.Query().AsNoTracking().Where(a => a.UserId == userId),
                 v => v.AnswerId!.Value,
                 a => a.AnswerId,
-                (v, a) => (int)v.VoteType)
-            .DefaultIfEmpty(0)
-            .SumAsync(cancellationToken);
+                (v, a) => (int?)v.VoteType)
+            .SumAsync(cancellationToken) ?? 0;
 
         var commentVoteSum = await _unitOfWork.Votes.Query()
             .AsNoTracking()
@@ -75,9 +73,8 @@ public class DashboardService : IDashboardService
             .Join(_unitOfWork.Comments.Query().AsNoTracking().Where(c => c.UserId == userId),
                 v => v.CommentId!.Value,
                 c => c.CommentId,
-                (v, c) => (int)v.VoteType)
-            .DefaultIfEmpty(0)
-            .SumAsync(cancellationToken);
+                (v, c) => (int?)v.VoteType)
+            .SumAsync(cancellationToken) ?? 0;
 
         var start = DateTime.UtcNow.Date.AddDays(-13);
 
@@ -199,4 +196,3 @@ public class DashboardService : IDashboardService
         return result;
     }
 }
-

@@ -33,9 +33,6 @@ public class QuestionService : IQuestionService
 
         return await _unitOfWork.Questions.Query()
             .AsNoTracking()
-            .Include(q => q.Category)
-            .Include(q => q.User)
-            .Include(q => q.Votes)
             .OrderByDescending(q => q.CreatedAt)
             .Take(take)
             .Select(q => new QuestionListItemDto
@@ -45,8 +42,10 @@ public class QuestionService : IQuestionService
                 CategoryName = q.Category.Name,
                 AuthorName = q.User.Name,
                 ViewCount = q.ViewCount,
-                Score = q.Votes.Select(v => (int)v.VoteType).DefaultIfEmpty(0).Sum(),
-                AnswerCount = q.Answers.Count,
+                Score = _unitOfWork.Votes.Query()
+                    .Where(v => v.QuestionId == q.QuestionId)
+                    .Sum(v => (int?)v.VoteType) ?? 0,
+                AnswerCount = _unitOfWork.Answers.Query().Count(a => a.QuestionId == q.QuestionId),
                 CreatedAt = q.CreatedAt
             })
             .ToListAsync(cancellationToken);
@@ -62,9 +61,6 @@ public class QuestionService : IQuestionService
 
         var query = _unitOfWork.Questions.Query()
             .AsNoTracking()
-            .Include(q => q.Category)
-            .Include(q => q.User)
-            .Include(q => q.Votes)
             .AsQueryable();
 
         if (tagId is not null && tagId.Value > 0)
@@ -92,7 +88,9 @@ public class QuestionService : IQuestionService
         query = sort switch
         {
             "trending" => query
-                .OrderByDescending(q => q.Votes.Select(v => (int)v.VoteType).DefaultIfEmpty(0).Sum())
+                .OrderByDescending(q => _unitOfWork.Votes.Query()
+                    .Where(v => v.QuestionId == q.QuestionId)
+                    .Sum(v => (int?)v.VoteType) ?? 0)
                 .ThenByDescending(q => q.CreatedAt),
             _ => query.OrderByDescending(q => q.CreatedAt)
         };
@@ -109,8 +107,10 @@ public class QuestionService : IQuestionService
                 CategoryName = q.Category.Name,
                 AuthorName = q.User.Name,
                 ViewCount = q.ViewCount,
-                Score = q.Votes.Select(v => (int)v.VoteType).DefaultIfEmpty(0).Sum(),
-                AnswerCount = q.Answers.Count,
+                Score = _unitOfWork.Votes.Query()
+                    .Where(v => v.QuestionId == q.QuestionId)
+                    .Sum(v => (int?)v.VoteType) ?? 0,
+                AnswerCount = _unitOfWork.Answers.Query().Count(a => a.QuestionId == q.QuestionId),
                 CreatedAt = q.CreatedAt
             })
             .ToListAsync(cancellationToken);
