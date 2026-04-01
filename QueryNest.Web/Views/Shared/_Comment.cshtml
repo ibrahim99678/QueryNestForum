@@ -27,7 +27,7 @@
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="id" value="@Model.CommentId" />
                     <input type="hidden" name="questionId" value="@questionId" />
-                    <button type="submit" class="btn btn-link link-danger p-0">Delete</button>
+                    <button type="submit" class="btn btn-link link-danger p-0 js-confirm-delete">Delete</button>
                 </form>
             </div>
         }

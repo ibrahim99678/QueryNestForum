@@ -131,6 +131,8 @@ public class QuestionsController : Controller
                 Score = a.Score,
                 CreatedAt = a.CreatedAt,
                 CanComment = isAuthenticated,
+                CanEdit = isAdmin || (currentProfileUserId is not null && currentProfileUserId.Value == a.AuthorUserId),
+                CanDelete = isAdmin || (currentProfileUserId is not null && currentProfileUserId.Value == a.AuthorUserId),
                 Comments = a.Comments.Select(c => MapComment(c, currentProfileUserId, isAdmin)).ToList()
             }).ToList()
         };

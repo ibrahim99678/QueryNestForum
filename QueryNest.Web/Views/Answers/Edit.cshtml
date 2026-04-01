@@ -1,0 +1,50 @@
+@model QueryNest.Web.Models.Answers.AnswerEditViewModel
+
+@{
+    ViewData["Title"] = "Edit answer";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-9">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="mb-0">Edit answer</h2>
+            <a class="btn btn-outline-secondary nav-pill-btn" asp-controller="Questions" asp-action="Details" asp-route-id="@Model.QuestionId">Back</a>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <form asp-controller="Answers" asp-action="Edit" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="AnswerId" />
+                    <input type="hidden" asp-for="QuestionId" />
+
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="Content" class="form-label"></label>
+                        <div class="md-toolbar btn-group btn-group-sm mb-2" role="group">
+                            <button type="button" class="btn btn-outline-secondary js-md-btn" data-target="#Content" data-action="bold">Bold</button>
+                            <button type="button" class="btn btn-outline-secondary js-md-btn" data-target="#Content" data-action="italic">Italic</button>
+                            <button type="button" class="btn btn-outline-secondary js-md-btn" data-target="#Content" data-action="inlineCode">Code</button>
+                            <button type="button" class="btn btn-outline-secondary js-md-btn" data-target="#Content" data-action="codeBlock">Code block</button>
+                            <button type="button" class="btn btn-outline-secondary js-md-btn" data-target="#Content" data-action="quote">Quote</button>
+                            <button type="button" class="btn btn-outline-secondary js-md-btn" data-target="#Content" data-action="highlight">Highlight</button>
+                        </div>
+                        <textarea asp-for="Content" class="form-control js-md-editor" rows="10"></textarea>
+                        <span asp-validation-for="Content" class="text-danger"></span>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary nav-pill-btn">Save</button>
+                        <a class="btn btn-outline-secondary nav-pill-btn" asp-controller="Questions" asp-action="Details" asp-route-id="@Model.QuestionId">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
+

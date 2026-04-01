@@ -302,3 +302,36 @@
         }
     });
 })();
+
+(() => {
+    const modalEl = document.getElementById("confirmDeleteModal");
+    const confirmBtn = document.getElementById("confirmDeleteButton");
+    if (!modalEl || !confirmBtn) {
+        return;
+    }
+
+    const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+    let formToSubmit = null;
+
+    document.addEventListener("click", (e) => {
+        const btn = e.target instanceof Element ? e.target.closest(".js-confirm-delete") : null;
+        if (!btn) {
+            return;
+        }
+
+        const form = btn.closest("form");
+        if (!form) {
+            return;
+        }
+
+        e.preventDefault();
+        formToSubmit = form;
+        modal.show();
+    });
+
+    confirmBtn.addEventListener("click", () => {
+        if (formToSubmit) {
+            formToSubmit.submit();
+        }
+    });
+})();

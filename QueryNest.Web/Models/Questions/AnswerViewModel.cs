@@ -10,4 +10,6 @@ public class AnswerViewModel
     public DateTime CreatedAt { get; set; }
     public List<CommentViewModel> Comments { get; set; } = [];
     public bool CanComment { get; set; }
+    public bool CanEdit { get; set; }
+    public bool CanDelete { get; set; }
 }

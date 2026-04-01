@@ -151,6 +151,22 @@
                             <span class="badge bg-primary">Score: @answer.Score</span>
                             @if (User.Identity?.IsAuthenticated == true)
                             {
+                                @if (answer.CanEdit)
+                                {
+                                    <a class="btn btn-sm btn-outline-secondary"
+                                       asp-controller="Answers"
+                                       asp-action="Edit"
+                                       asp-route-id="@answer.AnswerId">Edit</a>
+                                }
+                                @if (answer.CanDelete)
+                                {
+                                    <form asp-controller="Answers" asp-action="Delete" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@answer.AnswerId" />
+                                        <input type="hidden" name="questionId" value="@Model.QuestionId" />
+                                        <button type="submit" class="btn btn-sm btn-outline-danger js-confirm-delete">Delete</button>
+                                    </form>
+                                }
                                 <form asp-controller="Votes" asp-action="Cast" method="post" class="d-inline">
                                     @Html.AntiForgeryToken()
                                     <input type="hidden" name="QuestionId" value="@Model.QuestionId" />
@@ -225,3 +241,40 @@
 <div class="mt-3">
     <a class="btn btn-link" asp-controller="Questions" asp-action="Index">Back to list</a>
 </div>
+
+@section Scripts {
+    <script>
+        (() => {
+            const modalEl = document.getElementById("confirmDeleteModal");
+            const confirmBtn = document.getElementById("confirmDeleteButton");
+            if (!modalEl || !confirmBtn) {
+                return;
+            }
+
+            const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+            let formToSubmit = null;
+
+            document.addEventListener("click", (e) => {
+                const btn = e.target instanceof Element ? e.target.closest(".js-confirm-delete") : null;
+                if (!btn) {
+                    return;
+                }
+
+                const form = btn.closest("form");
+                if (!form) {
+                    return;
+                }
+
+                e.preventDefault();
+                formToSubmit = form;
+                modal.show();
+            });
+
+            confirmBtn.addEventListener("click", () => {
+                if (formToSubmit) {
+                    formToSubmit.submit();
+                }
+            });
+        })();
+    </script>
+}

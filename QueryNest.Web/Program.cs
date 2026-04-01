@@ -70,7 +70,17 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<QueryNestDbContext>();
-    dbContext.Database.EnsureCreated();
+    var ensureCreated = app.Environment.IsDevelopment() || builder.Configuration.GetValue<bool>("Database:EnsureCreated");
+    if (ensureCreated)
+    {
+        dbContext.Database.EnsureCreated();
+    }
+
+    if (!dbContext.Database.CanConnect())
+    {
+        throw new InvalidOperationException("Database is not reachable. Ensure the database exists and the connection string is correct.");
+    }
+
     EnsureNotificationsTable(dbContext);
     EnsureReportsTable(dbContext);
     EnsureTagFollowsTable(dbContext);

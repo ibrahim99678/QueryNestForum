@@ -106,6 +106,13 @@ public class ProfileController : Controller
 
         if (avatar is null || avatar.Length == 0)
         {
+            TempData["Warning"] = "Please choose an image to upload.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        if (avatar.Length > 2 * 1024 * 1024)
+        {
+            TempData["Error"] = "Avatar image is too large. Max size is 2MB.";
             return RedirectToAction(nameof(Index));
         }
 
@@ -113,22 +120,44 @@ public class ProfileController : Controller
         var allowed = new[] { ".png", ".jpg", ".jpeg", ".gif", ".webp" };
         if (!allowed.Contains(extension))
         {
+            TempData["Error"] = "Unsupported image type. Please upload PNG/JPG/GIF/WEBP.";
             return RedirectToAction(nameof(Index));
         }
 
-        var uploadsRoot = Path.Combine(_environment.WebRootPath, "uploads", "avatars");
-        Directory.CreateDirectory(uploadsRoot);
-
-        var fileName = $"{Guid.NewGuid():N}{extension}";
-        var fullPath = Path.Combine(uploadsRoot, fileName);
-
-        await using (var stream = System.IO.File.Create(fullPath))
+        try
         {
-            await avatar.CopyToAsync(stream, cancellationToken);
-        }
+            var webRoot = _environment.WebRootPath;
+            if (string.IsNullOrWhiteSpace(webRoot))
+            {
+                TempData["Error"] = "Server storage is not configured.";
+                return RedirectToAction(nameof(Index));
+            }
 
-        var relativePath = $"/uploads/avatars/{fileName}";
-        await _profileService.UpdateAvatarAsync(userId, relativePath, cancellationToken);
+            var uploadsRoot = Path.Combine(webRoot, "uploads", "avatars");
+            Directory.CreateDirectory(uploadsRoot);
+
+            var fileName = $"{Guid.NewGuid():N}{extension}";
+            var fullPath = Path.Combine(uploadsRoot, fileName);
+
+            await using (var stream = System.IO.File.Create(fullPath))
+            {
+                await avatar.CopyToAsync(stream, cancellationToken);
+            }
+
+            var relativePath = $"/uploads/avatars/{fileName}";
+            var result = await _profileService.UpdateAvatarAsync(userId, relativePath, cancellationToken);
+            if (!result.Succeeded)
+            {
+                TempData["Error"] = string.Join(" ", result.Errors);
+                return RedirectToAction(nameof(Index));
+            }
+
+            TempData["Success"] = "Avatar updated successfully.";
+        }
+        catch
+        {
+            TempData["Error"] = "Avatar upload failed. Please check server permissions for wwwroot/uploads/avatars.";
+        }
 
         return RedirectToAction(nameof(Index));
     }

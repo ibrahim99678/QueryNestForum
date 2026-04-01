@@ -41,7 +41,7 @@ else
                             <form asp-controller="Tags" asp-action="Delete" method="post" class="d-inline">
                                 @Html.AntiForgeryToken()
                                 <input type="hidden" name="id" value="@t.TagId" />
-                                <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                                <button type="submit" class="btn btn-sm btn-outline-danger js-confirm-delete">Delete</button>
                             </form>
                         </td>
                     </tr>
