@@ -44,44 +44,6 @@ Roles used:
 - `Admin`
 - `Moderator`
 
-### Option B: Promote an Existing User to Admin (Manual)
-
-If you already registered a normal user and want to make them an admin without seeding, you can do it directly in SQL Server.
-
-1. Find the user in Identity:
-
-```sql
-SELECT Id, UserName, Email
-FROM AspNetUsers
-WHERE Email = 'user@example.com';
-```
-
-2. Find the Admin role:
-
-```sql
-SELECT Id, Name
-FROM AspNetRoles
-WHERE Name = 'Admin';
-```
-
-3. Insert the user-role link (if it doesn’t exist yet):
-
-```sql
-IF NOT EXISTS (
-    SELECT 1
-    FROM AspNetUserRoles
-    WHERE UserId = '<USER_ID>' AND RoleId = '<ROLE_ID>'
-)
-BEGIN
-    INSERT INTO AspNetUserRoles (UserId, RoleId)
-    VALUES ('<USER_ID>', '<ROLE_ID>');
-END
-```
-
-4. Re-login to the app (cookie needs to refresh role claims). You should now see the Admin menu in the navbar.
-
-## Database Notes
-
 This project currently uses `dbContext.Database.EnsureCreated()` on startup.
 
 Some newer features add tables with conditional SQL at startup to keep existing databases working:
