@@ -1,6 +1,107 @@
-﻿@{
+@{
     ViewData["Title"] = "Privacy Policy";
 }
-<h1>@ViewData["Title"]</h1>
+<div class="row justify-content-center">
+    <div class="col-lg-10 col-xl-9">
+        <div class="mb-4">
+            <h1 class="mb-2">@ViewData["Title"]</h1>
+            <div class="text-muted">Last updated: @DateTime.UtcNow.ToString("yyyy-MM-dd")</div>
+        </div>
 
-<p>Use this page to detail your site's privacy policy.</p>
+        <div class="card mb-3">
+            <div class="card-body">
+                <p class="mb-0">
+                    This Privacy Policy explains how QueryNest collects, uses, and protects information when you use the site.
+                    By using QueryNest, you agree to the practices described here.
+                </p>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-body">
+                <h2 class="h5">Information We Collect</h2>
+                <ul class="mb-0">
+                    <li><strong>Account data</strong>: email, username/name, encrypted authentication data (managed by ASP.NET Identity).</li>
+                    <li><strong>Profile data</strong>: avatar image (if uploaded) and bio (optional).</li>
+                    <li><strong>Content you submit</strong>: questions, answers, comments, votes, reports, and tags you follow.</li>
+                    <li><strong>Usage data</strong>: basic analytics such as view counts and timestamps.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-body">
+                <h2 class="h5">How We Use Information</h2>
+                <ul class="mb-0">
+                    <li>Provide core features (posting, voting, following topics, notifications, moderation).</li>
+                    <li>Protect the platform (spam/abuse reporting, role-based moderation, account lockout for violations).</li>
+                    <li>Improve performance and user experience (caching, search, dashboard metrics).</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-body">
+                <h2 class="h5">Cookies & Local Storage</h2>
+                <ul class="mb-0">
+                    <li><strong>Authentication cookies</strong> keep you signed in.</li>
+                    <li><strong>Preferences</strong> may be stored in your browser (for example, recent search suggestions).</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-body">
+                <h2 class="h5">File Uploads</h2>
+                <p class="mb-2">
+                    If you upload an avatar, it is stored on the server and may be visible to other users on your posts.
+                </p>
+                <ul class="mb-0">
+                    <li>Do not upload sensitive personal documents.</li>
+                    <li>Uploaded files are intended only for profile representation.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-body">
+                <h2 class="h5">Data Retention</h2>
+                <p class="mb-0">
+                    We retain account and content data as long as necessary to operate the service, comply with legal obligations,
+                    and enforce platform rules. If you need deletion help, contact us.
+                </p>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-body">
+                <h2 class="h5">Security</h2>
+                <p class="mb-0">
+                    We use standard security practices (HTTPS, Identity-based authentication, and access controls). No system can
+                    be guaranteed 100% secure, so please use a strong password and keep your account safe.
+                </p>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-body">
+                <h2 class="h5">Your Choices</h2>
+                <ul class="mb-0">
+                    <li>Update your profile and avatar from the Profile page.</li>
+                    <li>Change your password from Profile → Change password.</li>
+                    <li>Follow or unfollow topics at any time.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <h2 class="h5">Contact</h2>
+                <div class="text-muted mb-2">For privacy questions or support, contact:</div>
+                <div>
+                    <div><strong>Technical Contact</strong>: <a class="text-decoration-none" href="tel:+8801911848073">+8801911848073</a></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -40,7 +40,7 @@
     </div>
 
     <div class="col-md-8">
-        <div class="card">
+        <div class="card mb-3">
             <div class="card-body">
                 <h5 class="card-title">Edit profile</h5>
 
@@ -63,6 +63,14 @@
 
                     <button type="submit" class="btn btn-primary">Save</button>
                 </form>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title mb-1">Security</h5>
+                <div class="text-muted mb-3">Change your password anytime.</div>
+                <a class="btn btn-outline-secondary nav-pill-btn" asp-controller="Profile" asp-action="ChangePassword">Change password</a>
             </div>
         </div>
     </div>

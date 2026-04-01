@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using QueryNest.BLL.Interfaces;
@@ -12,11 +13,15 @@ public class ProfileController : Controller
 {
     private readonly IProfileService _profileService;
     private readonly IWebHostEnvironment _environment;
+    private readonly UserManager<IdentityUser> _userManager;
+    private readonly SignInManager<IdentityUser> _signInManager;
 
-    public ProfileController(IProfileService profileService, IWebHostEnvironment environment)
+    public ProfileController(IProfileService profileService, IWebHostEnvironment environment, UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager)
     {
         _profileService = profileService;
         _environment = environment;
+        _userManager = userManager;
+        _signInManager = signInManager;
     }
 
     [HttpGet]
@@ -125,6 +130,77 @@ public class ProfileController : Controller
         var relativePath = $"/uploads/avatars/{fileName}";
         await _profileService.UpdateAvatarAsync(userId, relativePath, cancellationToken);
 
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> ChangePassword(CancellationToken cancellationToken)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            return RedirectToAction("Login", "Account");
+        }
+
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user is null)
+        {
+            return RedirectToAction("Login", "Account");
+        }
+
+        var hasPassword = await _userManager.HasPasswordAsync(user);
+        return View(new ChangePasswordViewModel { HasPassword = hasPassword });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ChangePassword(ChangePasswordViewModel model, CancellationToken cancellationToken)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            return RedirectToAction("Login", "Account");
+        }
+
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user is null)
+        {
+            return RedirectToAction("Login", "Account");
+        }
+
+        model.HasPassword = await _userManager.HasPasswordAsync(user);
+        if (model.HasPassword && string.IsNullOrWhiteSpace(model.CurrentPassword))
+        {
+            ModelState.AddModelError(nameof(ChangePasswordViewModel.CurrentPassword), "Current password is required.");
+        }
+
+        if (!ModelState.IsValid)
+        {
+            return View(model);
+        }
+
+        IdentityResult result;
+        if (model.HasPassword)
+        {
+            result = await _userManager.ChangePasswordAsync(user, model.CurrentPassword!, model.NewPassword);
+        }
+        else
+        {
+            result = await _userManager.AddPasswordAsync(user, model.NewPassword);
+        }
+
+        if (!result.Succeeded)
+        {
+            foreach (var error in result.Errors)
+            {
+                ModelState.AddModelError(string.Empty, error.Description);
+            }
+
+            return View(model);
+        }
+
+        await _signInManager.RefreshSignInAsync(user);
+        TempData["Success"] = "Password updated successfully.";
         return RedirectToAction(nameof(Index));
     }
 }

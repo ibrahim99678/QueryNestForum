@@ -10,10 +10,12 @@ namespace QueryNest.BLL.Services;
 public class TagService : ITagService
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ICacheService _cacheService;
 
-    public TagService(IUnitOfWork unitOfWork)
+    public TagService(IUnitOfWork unitOfWork, ICacheService cacheService)
     {
         _unitOfWork = unitOfWork;
+        _cacheService = cacheService;
     }
 
     public async Task<List<TagSummaryDto>> GetAllAsync(string? aspNetUserId, string? query = null, CancellationToken cancellationToken = default)
@@ -61,6 +63,110 @@ public class TagService : ITagService
             FollowerCount = t.FollowerCount,
             IsFollowedByCurrentUser = followed.Contains(t.TagId)
         }).ToList();
+    }
+
+    public async Task<List<TagSummaryDto>> GetTrendingAsync(string? aspNetUserId, int take = 10, CancellationToken cancellationToken = default)
+    {
+        if (take <= 0)
+        {
+            take = 10;
+        }
+
+        take = Math.Min(take, 20);
+        var key = $"tags:trending:{take}";
+
+        var tags = await _cacheService.GetOrSetAsync(
+            key,
+            TimeSpan.FromSeconds(60),
+            async ct =>
+            {
+                return await _unitOfWork.Tags.Query()
+                    .AsNoTracking()
+                    .OrderByDescending(t => t.Followers.Count)
+                    .ThenByDescending(t => t.QuestionTags.Count)
+                    .Take(take)
+                    .Select(t => new TagSummaryDto
+                    {
+                        TagId = t.TagId,
+                        Name = t.Name,
+                        Slug = t.Slug,
+                        QuestionCount = t.QuestionTags.Count,
+                        FollowerCount = t.Followers.Count,
+                        IsFollowedByCurrentUser = false
+                    })
+                    .ToListAsync(ct);
+            },
+            cancellationToken);
+
+        if (string.IsNullOrWhiteSpace(aspNetUserId))
+        {
+            return tags;
+        }
+
+        var userProfileId = await GetUserProfileIdAsync(aspNetUserId, cancellationToken);
+        if (userProfileId is null || tags.Count == 0)
+        {
+            return tags;
+        }
+
+        var tagIds = tags.Select(t => t.TagId).ToList();
+        var followedIds = await _unitOfWork.TagFollows.Query()
+            .AsNoTracking()
+            .Where(tf => tf.UserId == userProfileId.Value && tagIds.Contains(tf.TagId))
+            .Select(tf => tf.TagId)
+            .ToListAsync(cancellationToken);
+
+        var followed = followedIds.ToHashSet();
+        return tags.Select(t => new TagSummaryDto
+        {
+            TagId = t.TagId,
+            Name = t.Name,
+            Slug = t.Slug,
+            QuestionCount = t.QuestionCount,
+            FollowerCount = t.FollowerCount,
+            IsFollowedByCurrentUser = followed.Contains(t.TagId)
+        }).ToList();
+    }
+
+    public async Task<List<TagSummaryDto>> SuggestAsync(string? query, int take = 8, CancellationToken cancellationToken = default)
+    {
+        if (take <= 0)
+        {
+            take = 8;
+        }
+
+        take = Math.Min(take, 12);
+        var normalized = string.IsNullOrWhiteSpace(query) ? string.Empty : query.Trim();
+        var key = $"tags:suggest:{normalized.ToLowerInvariant()}:{take}";
+
+        return await _cacheService.GetOrSetAsync(
+            key,
+            TimeSpan.FromSeconds(30),
+            async ct =>
+            {
+                var tagsQuery = _unitOfWork.Tags.Query().AsNoTracking();
+                if (!string.IsNullOrWhiteSpace(normalized))
+                {
+                    var pattern = $"%{normalized}%";
+                    tagsQuery = tagsQuery.Where(t => EF.Functions.Like(t.Name, pattern));
+                }
+
+                return await tagsQuery
+                    .OrderByDescending(t => t.Followers.Count)
+                    .ThenByDescending(t => t.QuestionTags.Count)
+                    .Take(take)
+                    .Select(t => new TagSummaryDto
+                    {
+                        TagId = t.TagId,
+                        Name = t.Name,
+                        Slug = t.Slug,
+                        QuestionCount = t.QuestionTags.Count,
+                        FollowerCount = t.Followers.Count,
+                        IsFollowedByCurrentUser = false
+                    })
+                    .ToListAsync(ct);
+            },
+            cancellationToken);
     }
 
     public async Task<TagSummaryDto?> GetByIdAsync(int tagId, string? aspNetUserId, CancellationToken cancellationToken = default)

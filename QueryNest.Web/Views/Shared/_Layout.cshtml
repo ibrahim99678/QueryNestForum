@@ -12,7 +12,7 @@
     <header>
         <nav class="navbar app-navbar navbar-expand-lg">
             <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Questions" asp-action="Index">
+                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">
                     <img src="~/images/default-avatar.svg" alt="QueryNest" class="brand-mark" />
                     <span>QueryNest</span>
                 </a>
@@ -22,6 +22,9 @@
                 </button>
                 <div class="collapse navbar-collapse" id="appNavbar">
                     <ul class="navbar-nav me-3">
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                        </li>
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Questions" asp-action="Index">Questions</a>
                         </li>
@@ -90,9 +93,77 @@
         </main>
     </div>
 
-    <footer class="border-top footer text-muted">
+    <div id="appToasts" class="toast-container toast-top-right p-3">
+        @if (TempData["Success"] is string toastSuccess && !string.IsNullOrWhiteSpace(toastSuccess))
+        {
+            <div class="toast text-bg-success border-0 mb-2" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="3500">
+                <div class="d-flex">
+                    <div class="toast-body">@toastSuccess</div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            </div>
+        }
+        @if (TempData["Error"] is string toastError && !string.IsNullOrWhiteSpace(toastError))
+        {
+            <div class="toast text-bg-danger border-0 mb-2" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="5000">
+                <div class="d-flex">
+                    <div class="toast-body">@toastError</div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            </div>
+        }
+        @if (TempData["ReportMessage"] is string toastInfo && !string.IsNullOrWhiteSpace(toastInfo))
+        {
+            <div class="toast text-bg-secondary border-0 mb-2" role="alert" aria-live="polite" aria-atomic="true" data-bs-delay="4000">
+                <div class="d-flex">
+                    <div class="toast-body">@toastInfo</div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            </div>
+        }
+        @if (TempData["Info"] is string toastInfo2 && !string.IsNullOrWhiteSpace(toastInfo2))
+        {
+            <div class="toast text-bg-info border-0 mb-2" role="alert" aria-live="polite" aria-atomic="true" data-bs-delay="4000">
+                <div class="d-flex">
+                    <div class="toast-body">@toastInfo2</div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            </div>
+        }
+        @if (TempData["Warning"] is string toastWarning && !string.IsNullOrWhiteSpace(toastWarning))
+        {
+            <div class="toast text-bg-warning border-0 mb-2" role="alert" aria-live="polite" aria-atomic="true" data-bs-delay="5000">
+                <div class="d-flex">
+                    <div class="toast-body">@toastWarning</div>
+                    <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            </div>
+        }
+    </div>
+
+    <footer class="app-footer">
         <div class="container">
-            &copy; 2026 - QueryNest.Web - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            <div class="row g-3 align-items-center">
+                <div class="col-md-6">
+                    <a class="footer-brand" asp-controller="Home" asp-action="Index">
+                        <img src="~/images/default-avatar.svg" alt="QueryNest" />
+                        <span>QueryNest</span>
+                    </a>
+                    <div class="text-muted small mt-2">
+                        Technical Contact: <a class="text-decoration-none" href="tel:+8801911848073">+8801911848073</a>
+                    </div>
+                </div>
+                <div class="col-md-6 text-md-end footer-links">
+                    <a asp-controller="Home" asp-action="Privacy">Privacy</a>
+                    <span class="text-muted px-2">•</span>
+                    <a asp-controller="Questions" asp-action="Index">Questions</a>
+                    <span class="text-muted px-2">•</span>
+                    <a asp-controller="Tags" asp-action="Index">Topics</a>
+                    <div class="text-muted small mt-2">
+                        &copy; @DateTime.UtcNow.Year QueryNest. All rights reserved.
+                    </div>
+                </div>
+            </div>
         </div>
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>

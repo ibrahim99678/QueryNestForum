@@ -16,6 +16,7 @@ public class QuestionRepository : GenericRepository<Question>, IQuestionReposito
     public async Task<Question?> GetDetailsAsync(int questionId, CancellationToken cancellationToken = default)
     {
         return await _questions
+            .AsSplitQuery()
             .Include(q => q.User)
             .Include(q => q.Category)
             .Include(q => q.Votes)

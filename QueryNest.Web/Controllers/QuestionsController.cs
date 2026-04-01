@@ -20,12 +20,13 @@ public class QuestionsController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Index(string? q, int? tagId, string? sort, int page = 1, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Index(string? q, int? categoryId, int? tagId, string? sort, int page = 1, CancellationToken cancellationToken = default)
     {
         var queryResult = await _questionService.QueryAsync(
             new QueryNest.Contract.Questions.QuestionQueryRequestDto
             {
                 Query = q,
+                CategoryId = categoryId,
                 TagId = tagId,
                 Sort = sort ?? "latest",
                 Page = page,
@@ -34,6 +35,12 @@ public class QuestionsController : Controller
             cancellationToken);
 
         var data = await _questionService.GetUpsertDataAsync(cancellationToken);
+        var categoryOptions = new List<SelectListItem>
+        {
+            new SelectListItem("All categories", string.Empty, categoryId is null)
+        };
+        categoryOptions.AddRange(data.Categories.Select(c => new SelectListItem(c.Name, c.CategoryId.ToString(), categoryId == c.CategoryId)));
+
         var tagOptions = new List<SelectListItem>
         {
             new SelectListItem("All tags", string.Empty, tagId is null)
@@ -54,11 +61,13 @@ public class QuestionsController : Controller
                 CreatedAt = x.CreatedAt
             }).ToList(),
             Query = q,
+            CategoryId = categoryId,
             TagId = tagId,
             Sort = (sort ?? "latest").Trim().ToLowerInvariant(),
             Page = queryResult.Page,
             TotalPages = queryResult.TotalPages,
             TotalCount = queryResult.TotalCount,
+            CategoryOptions = categoryOptions,
             TagOptions = tagOptions,
             SortOptions = new List<SelectListItem>
             {

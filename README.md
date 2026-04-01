@@ -32,7 +32,9 @@ dotnet run --project .\QueryNest.Web\QueryNest.Web.csproj
 
 ## Default Admin User
 
-On startup, an admin is seeded:
+In Development, an admin is seeded by default.
+
+In Production, admin seeding is disabled unless you enable it via configuration (`SeedAdmin:Enabled=true`).
 
 - Email: `admin@querynest.com`
 - Password: `Admin@123`
@@ -41,6 +43,42 @@ Roles used:
 
 - `Admin`
 - `Moderator`
+
+### Option B: Promote an Existing User to Admin (Manual)
+
+If you already registered a normal user and want to make them an admin without seeding, you can do it directly in SQL Server.
+
+1. Find the user in Identity:
+
+```sql
+SELECT Id, UserName, Email
+FROM AspNetUsers
+WHERE Email = 'user@example.com';
+```
+
+2. Find the Admin role:
+
+```sql
+SELECT Id, Name
+FROM AspNetRoles
+WHERE Name = 'Admin';
+```
+
+3. Insert the user-role link (if it doesn’t exist yet):
+
+```sql
+IF NOT EXISTS (
+    SELECT 1
+    FROM AspNetUserRoles
+    WHERE UserId = '<USER_ID>' AND RoleId = '<ROLE_ID>'
+)
+BEGIN
+    INSERT INTO AspNetUserRoles (UserId, RoleId)
+    VALUES ('<USER_ID>', '<ROLE_ID>');
+END
+```
+
+4. Re-login to the app (cookie needs to refresh role claims). You should now see the Admin menu in the navbar.
 
 ## Database Notes
 
@@ -51,8 +89,50 @@ Some newer features add tables with conditional SQL at startup to keep existing 
 - `Notifications`
 - `Reports`
 - `TagFollows`
+- Performance indexes (for common query paths)
 
 If you prefer EF migrations, you can migrate this approach later, but the current startup behavior is designed to avoid runtime crashes when running against an existing DB.
+
+## Caching (Optional Redis)
+
+Caching uses `IDistributedCache`.
+
+- If a connection string named `Redis` is configured, the app uses Redis.
+- Otherwise it falls back to in-memory distributed cache.
+
+## Deploy to IIS (Windows)
+
+Prerequisites:
+
+- Install the .NET 8 Hosting Bundle on the server (enables ASP.NET Core Module for IIS).
+- SQL Server reachable from the server.
+
+Publish:
+
+```bash
+dotnet publish .\QueryNest.Web\QueryNest.Web.csproj -c Release -o .\publish
+```
+
+IIS setup:
+
+1. Create a folder like `C:\inetpub\querynest\` and copy the contents of `publish\` into it.
+2. In IIS Manager:
+   - Create a new Application Pool:
+     - .NET CLR version: No Managed Code
+     - Pipeline mode: Integrated
+   - Create a new Website (or Application) pointing to `C:\inetpub\querynest\`
+   - Assign the site to the new Application Pool
+3. Give the App Pool identity write permission to:
+   - `C:\inetpub\querynest\wwwroot\uploads\` (avatars/uploads)
+   - Data protection keys folder (recommended)
+
+Recommended production settings:
+
+- Set `ASPNETCORE_ENVIRONMENT=Production`
+- Configure `ConnectionStrings:DefaultConnection`
+- Persist data-protection keys (prevents logouts after app restarts):
+  - Set `DataProtection:KeysPath` to a writable folder, e.g. `C:\inetpub\querynest-keys\`
+- Keep `SeedAdmin:Enabled=false` in Production and create admins through an internal process or a one-time secure bootstrap.
 
 ## Features
 

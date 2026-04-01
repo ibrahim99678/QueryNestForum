@@ -45,11 +45,8 @@ public class TagsController : Controller
     [HttpGet]
     public async Task<IActionResult> Suggest(string? q, CancellationToken cancellationToken)
     {
-        var items = await _tagService.GetAllAsync(null, q, cancellationToken);
+        var items = await _tagService.SuggestAsync(q, 8, cancellationToken);
         var result = items
-            .OrderByDescending(t => t.FollowerCount)
-            .ThenByDescending(t => t.QuestionCount)
-            .Take(8)
             .Select(t => new { tagId = t.TagId, name = t.Name, slug = t.Slug })
             .ToList();
 

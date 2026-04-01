@@ -282,3 +282,23 @@
         });
     }
 })();
+
+(() => {
+    const container = document.getElementById("appToasts");
+    if (!container) {
+        return;
+    }
+
+    const toasts = container.querySelectorAll(".toast");
+    if (!toasts.length) {
+        return;
+    }
+
+    toasts.forEach((el) => {
+        try {
+            const toast = bootstrap.Toast.getOrCreateInstance(el);
+            toast.show();
+        } catch {
+        }
+    });
+})();

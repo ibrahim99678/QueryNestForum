@@ -15,15 +15,19 @@
 <form method="get" asp-controller="Questions" asp-action="Index" class="card mb-3">
     <div class="card-body">
         <div class="row g-2 align-items-end">
-            <div class="col-md-6">
+            <div class="col-lg-5">
                 <label class="form-label" for="q">Search</label>
                 <input id="q" name="q" value="@Model.Query" class="form-control" placeholder="Search questions..." />
             </div>
-            <div class="col-md-3">
+            <div class="col-lg-3">
+                <label class="form-label" for="categoryId">Category</label>
+                <select id="categoryId" name="categoryId" class="form-select" asp-items="Model.CategoryOptions"></select>
+            </div>
+            <div class="col-lg-2">
                 <label class="form-label" for="tagId">Tag</label>
                 <select id="tagId" name="tagId" class="form-select" asp-items="Model.TagOptions"></select>
             </div>
-            <div class="col-md-3">
+            <div class="col-lg-2">
                 <label class="form-label" for="sort">Sort</label>
                 <select id="sort" name="sort" class="form-select" asp-items="Model.SortOptions"></select>
             </div>
@@ -44,15 +48,15 @@ else
     <div class="text-muted mb-2">
         Showing @Model.Items.Count of @Model.TotalCount
     </div>
-    <div class="list-group">
+    <div class="list-group question-list">
         @foreach (var q in Model.Items)
         {
             <a class="list-group-item list-group-item-action" asp-controller="Questions" asp-action="Details" asp-route-id="@q.QuestionId">
-                <div class="d-flex w-100 justify-content-between">
-                    <h5 class="mb-1">@q.Title</h5>
-                    <small class="text-muted">@q.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</small>
+                <div class="d-flex w-100 justify-content-between question-item-header">
+                    <h5 class="mb-1 question-item-title">@q.Title</h5>
+                    <small class="text-muted question-item-date">@q.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</small>
                 </div>
-                <div class="d-flex gap-2 flex-wrap">
+                <div class="d-flex gap-2 flex-wrap question-item-meta">
                     <span class="badge bg-light text-dark border">@q.CategoryName</span>
                     <span class="text-muted">by @q.AuthorName</span>
                     <span class="text-muted">•</span>
@@ -68,13 +72,30 @@ else
     @if (Model.TotalPages > 1)
     {
         <nav class="mt-3">
-            <ul class="pagination">
+            @if (Model.Page < Model.TotalPages)
+            {
+                <div class="d-grid d-sm-none">
+                    <a class="btn btn-outline-primary"
+                       asp-controller="Questions"
+                       asp-action="Index"
+                       asp-route-page="@(Model.Page + 1)"
+                       asp-route-q="@Model.Query"
+                       asp-route-categoryId="@Model.CategoryId"
+                       asp-route-tagId="@Model.TagId"
+                       asp-route-sort="@Model.Sort">
+                        Load more
+                    </a>
+                </div>
+            }
+
+            <ul class="pagination pagination-sm d-none d-sm-flex">
                 <li class="page-item @(Model.Page <= 1 ? "disabled" : "")">
                     <a class="page-link"
                        asp-controller="Questions"
                        asp-action="Index"
                        asp-route-page="@(Model.Page - 1)"
                        asp-route-q="@Model.Query"
+                       asp-route-categoryId="@Model.CategoryId"
                        asp-route-tagId="@Model.TagId"
                        asp-route-sort="@Model.Sort">Previous</a>
                 </li>
@@ -89,6 +110,7 @@ else
                        asp-action="Index"
                        asp-route-page="@(Model.Page + 1)"
                        asp-route-q="@Model.Query"
+                       asp-route-categoryId="@Model.CategoryId"
                        asp-route-tagId="@Model.TagId"
                        asp-route-sort="@Model.Sort">Next</a>
                 </li>

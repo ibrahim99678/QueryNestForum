@@ -17,11 +17,13 @@ public class QuestionService : IQuestionService
 {
     private readonly UserManager<IdentityUser> _userManager;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ICacheService _cacheService;
 
-    public QuestionService(UserManager<IdentityUser> userManager, IUnitOfWork unitOfWork)
+    public QuestionService(UserManager<IdentityUser> userManager, IUnitOfWork unitOfWork, ICacheService cacheService)
     {
         _userManager = userManager;
         _unitOfWork = unitOfWork;
+        _cacheService = cacheService;
     }
 
     public async Task<List<QuestionListItemDto>> GetLatestAsync(int take = 50, CancellationToken cancellationToken = default)
@@ -31,24 +33,65 @@ public class QuestionService : IQuestionService
             take = 50;
         }
 
-        return await _unitOfWork.Questions.Query()
-            .AsNoTracking()
-            .OrderByDescending(q => q.CreatedAt)
-            .Take(take)
-            .Select(q => new QuestionListItemDto
+        take = Math.Min(take, 100);
+        var cacheKey = $"questions:latest:{take}";
+
+        return await _cacheService.GetOrSetAsync(
+            cacheKey,
+            TimeSpan.FromSeconds(20),
+            async ct =>
             {
-                QuestionId = q.QuestionId,
-                Title = q.Title,
-                CategoryName = q.Category.Name,
-                AuthorName = q.User.Name,
-                ViewCount = q.ViewCount,
-                Score = _unitOfWork.Votes.Query()
-                    .Where(v => v.QuestionId == q.QuestionId)
-                    .Sum(v => (int?)v.VoteType) ?? 0,
-                AnswerCount = _unitOfWork.Answers.Query().Count(a => a.QuestionId == q.QuestionId),
-                CreatedAt = q.CreatedAt
-            })
-            .ToListAsync(cancellationToken);
+                var rows = await _unitOfWork.Questions.Query()
+                    .AsNoTracking()
+                    .OrderByDescending(q => q.CreatedAt)
+                    .Take(take)
+                    .Select(q => new
+                    {
+                        q.QuestionId,
+                        q.Title,
+                        CategoryName = q.Category.Name,
+                        AuthorName = q.User.Name,
+                        q.ViewCount,
+                        q.CreatedAt
+                    })
+                    .ToListAsync(ct);
+
+                var ids = rows.Select(r => r.QuestionId).ToList();
+                if (ids.Count == 0)
+                {
+                    return [];
+                }
+
+                var scores = await _unitOfWork.Votes.Query()
+                    .AsNoTracking()
+                    .Where(v => v.QuestionId != null && ids.Contains(v.QuestionId.Value))
+                    .GroupBy(v => v.QuestionId!.Value)
+                    .Select(g => new { QuestionId = g.Key, Score = g.Sum(v => (int?)v.VoteType) ?? 0 })
+                    .ToListAsync(ct);
+
+                var answerCounts = await _unitOfWork.Answers.Query()
+                    .AsNoTracking()
+                    .Where(a => ids.Contains(a.QuestionId))
+                    .GroupBy(a => a.QuestionId)
+                    .Select(g => new { QuestionId = g.Key, Count = g.Count() })
+                    .ToListAsync(ct);
+
+                var scoreMap = scores.ToDictionary(x => x.QuestionId, x => x.Score);
+                var answerMap = answerCounts.ToDictionary(x => x.QuestionId, x => x.Count);
+
+                return rows.Select(r => new QuestionListItemDto
+                {
+                    QuestionId = r.QuestionId,
+                    Title = r.Title,
+                    CategoryName = r.CategoryName,
+                    AuthorName = r.AuthorName,
+                    ViewCount = r.ViewCount,
+                    Score = scoreMap.TryGetValue(r.QuestionId, out var s) ? s : 0,
+                    AnswerCount = answerMap.TryGetValue(r.QuestionId, out var a) ? a : 0,
+                    CreatedAt = r.CreatedAt
+                }).ToList();
+            },
+            cancellationToken);
     }
 
     public async Task<PagedResultDto<QuestionListItemDto>> QueryAsync(QuestionQueryRequestDto request, CancellationToken cancellationToken = default)
@@ -56,16 +99,46 @@ public class QuestionService : IQuestionService
         var pageSize = request.PageSize <= 0 ? 20 : Math.Min(request.PageSize, 50);
         var page = request.Page <= 0 ? 1 : request.Page;
         var sort = string.IsNullOrWhiteSpace(request.Sort) ? "latest" : request.Sort.Trim().ToLowerInvariant();
+        var categoryId = request.CategoryId;
         var tagId = request.TagId;
         var queryText = string.IsNullOrWhiteSpace(request.Query) ? null : request.Query.Trim();
 
-        var query = _unitOfWork.Questions.Query()
+        var cacheable = page == 1 &&
+                        categoryId is null &&
+                        tagId is null &&
+                        string.IsNullOrWhiteSpace(queryText) &&
+                        (sort == "latest" || sort == "trending");
+
+        if (cacheable)
+        {
+            var key = $"questions:feed:{sort}:ps:{pageSize}";
+            return await _cacheService.GetOrSetAsync(key, TimeSpan.FromSeconds(15), ct => QueryInternalAsync(request, ct), cancellationToken);
+        }
+
+        return await QueryInternalAsync(request, cancellationToken);
+    }
+
+    private async Task<PagedResultDto<QuestionListItemDto>> QueryInternalAsync(QuestionQueryRequestDto request, CancellationToken cancellationToken)
+    {
+        var pageSize = request.PageSize <= 0 ? 20 : Math.Min(request.PageSize, 50);
+        var page = request.Page <= 0 ? 1 : request.Page;
+        var sort = string.IsNullOrWhiteSpace(request.Sort) ? "latest" : request.Sort.Trim().ToLowerInvariant();
+        var categoryId = request.CategoryId;
+        var tagId = request.TagId;
+        var queryText = string.IsNullOrWhiteSpace(request.Query) ? null : request.Query.Trim();
+
+        var baseQuery = _unitOfWork.Questions.Query()
             .AsNoTracking()
             .AsQueryable();
 
+        if (categoryId is not null && categoryId.Value > 0)
+        {
+            baseQuery = baseQuery.Where(q => q.CategoryId == categoryId.Value);
+        }
+
         if (tagId is not null && tagId.Value > 0)
         {
-            query = query.Where(q => q.QuestionTags.Any(qt => qt.TagId == tagId.Value));
+            baseQuery = baseQuery.Where(q => q.QuestionTags.Any(qt => qt.TagId == tagId.Value));
         }
 
         if (!string.IsNullOrWhiteSpace(queryText))
@@ -79,41 +152,67 @@ public class QuestionService : IQuestionService
             foreach (var term in terms)
             {
                 var pattern = $"%{term}%";
-                query = query.Where(q =>
+                baseQuery = baseQuery.Where(q =>
                     EF.Functions.Like(q.Title, pattern) ||
                     EF.Functions.Like(q.Description, pattern));
             }
         }
 
-        query = sort switch
+        var totalCount = await baseQuery.CountAsync(cancellationToken);
+
+        var ordered = sort switch
         {
-            "trending" => query
+            "trending" => baseQuery
                 .OrderByDescending(q => _unitOfWork.Votes.Query()
                     .Where(v => v.QuestionId == q.QuestionId)
                     .Sum(v => (int?)v.VoteType) ?? 0)
                 .ThenByDescending(q => q.CreatedAt),
-            _ => query.OrderByDescending(q => q.CreatedAt)
+            _ => baseQuery.OrderByDescending(q => q.CreatedAt)
         };
 
-        var totalCount = await query.CountAsync(cancellationToken);
-
-        var items = await query
+        var rows = await ordered
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .Select(q => new QuestionListItemDto
+            .Select(q => new
             {
-                QuestionId = q.QuestionId,
-                Title = q.Title,
+                q.QuestionId,
+                q.Title,
                 CategoryName = q.Category.Name,
                 AuthorName = q.User.Name,
-                ViewCount = q.ViewCount,
-                Score = _unitOfWork.Votes.Query()
-                    .Where(v => v.QuestionId == q.QuestionId)
-                    .Sum(v => (int?)v.VoteType) ?? 0,
-                AnswerCount = _unitOfWork.Answers.Query().Count(a => a.QuestionId == q.QuestionId),
-                CreatedAt = q.CreatedAt
+                q.ViewCount,
+                q.CreatedAt
             })
             .ToListAsync(cancellationToken);
+
+        var ids = rows.Select(r => r.QuestionId).ToList();
+        var scores = await _unitOfWork.Votes.Query()
+            .AsNoTracking()
+            .Where(v => v.QuestionId != null && ids.Contains(v.QuestionId.Value))
+            .GroupBy(v => v.QuestionId!.Value)
+            .Select(g => new { QuestionId = g.Key, Score = g.Sum(v => (int?)v.VoteType) ?? 0 })
+            .ToListAsync(cancellationToken);
+
+        var answerCounts = await _unitOfWork.Answers.Query()
+            .AsNoTracking()
+            .Where(a => ids.Contains(a.QuestionId))
+            .GroupBy(a => a.QuestionId)
+            .Select(g => new { QuestionId = g.Key, Count = g.Count() })
+            .ToListAsync(cancellationToken);
+
+        var scoreMap = scores.ToDictionary(x => x.QuestionId, x => x.Score);
+        var answerMap = answerCounts.ToDictionary(x => x.QuestionId, x => x.Count);
+
+        var items = rows.Select(r => new QuestionListItemDto
+        {
+            QuestionId = r.QuestionId,
+            Title = r.Title,
+            CategoryName = r.CategoryName,
+            AuthorName = r.AuthorName,
+            ViewCount = r.ViewCount,
+            Score = scoreMap.TryGetValue(r.QuestionId, out var s) ? s : 0,
+            AnswerCount = answerMap.TryGetValue(r.QuestionId, out var a) ? a : 0,
+            CreatedAt = r.CreatedAt
+        }).ToList();
 
         return new PagedResultDto<QuestionListItemDto>
         {

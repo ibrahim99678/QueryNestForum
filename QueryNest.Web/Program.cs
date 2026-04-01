@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using QueryNest.BLL.Interfaces;
 using QueryNest.BLL.Services;
@@ -6,11 +7,13 @@ using QueryNest.DAL;
 using QueryNest.DAL.Data;
 using QueryNest.DAL.Interfaces;
 using QueryNest.Web.Security;
+using System.IO;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddResponseCompression(options => { options.EnableForHttps = true; });
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
                        ?? throw new InvalidOperationException("Connection string 'DefaultConnection' was not found.");
@@ -30,6 +33,13 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.AccessDeniedPath = "/Account/AccessDenied";
 });
 
+var dataProtectionKeysPath = builder.Configuration["DataProtection:KeysPath"];
+if (!string.IsNullOrWhiteSpace(dataProtectionKeysPath))
+{
+    builder.Services.AddDataProtection()
+        .PersistKeysToFileSystem(new DirectoryInfo(dataProtectionKeysPath));
+}
+
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IProfileService, ProfileService>();
@@ -43,6 +53,17 @@ builder.Services.AddScoped<IReportService, ReportService>();
 builder.Services.AddScoped<ITagService, TagService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.AddSingleton<ICacheService, CacheService>();
+
+var redisConnection = builder.Configuration.GetConnectionString("Redis");
+if (!string.IsNullOrWhiteSpace(redisConnection))
+{
+    builder.Services.AddStackExchangeRedisCache(options => { options.Configuration = redisConnection; });
+}
+else
+{
+    builder.Services.AddDistributedMemoryCache();
+}
 
 var app = builder.Build();
 
@@ -53,11 +74,18 @@ using (var scope = app.Services.CreateScope())
     EnsureNotificationsTable(dbContext);
     EnsureReportsTable(dbContext);
     EnsureTagFollowsTable(dbContext);
+    EnsurePerformanceIndexes(dbContext);
 
     RoleSeeder.Seed(scope.ServiceProvider).GetAwaiter().GetResult();
 
     var initialSeedService = scope.ServiceProvider.GetRequiredService<IInitialSeedService>();
-    initialSeedService.SeedAdminAsync("admin@querynest.com", "Admin@123").GetAwaiter().GetResult();
+    var seedAdminEnabled = builder.Environment.IsDevelopment() || builder.Configuration.GetValue<bool>("SeedAdmin:Enabled");
+    if (seedAdminEnabled)
+    {
+        var seedEmail = builder.Configuration["SeedAdmin:Email"] ?? "admin@querynest.com";
+        var seedPassword = builder.Configuration["SeedAdmin:Password"] ?? "Admin@123";
+        initialSeedService.SeedAdminAsync(seedEmail, seedPassword).GetAwaiter().GetResult();
+    }
 }
 
 static void EnsureNotificationsTable(QueryNestDbContext dbContext)
@@ -143,6 +171,35 @@ BEGIN
 END");
 }
 
+static void EnsurePerformanceIndexes(QueryNestDbContext dbContext)
+{
+    dbContext.Database.ExecuteSqlRaw(@"
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_Questions_CreatedAt' AND object_id = OBJECT_ID('dbo.Questions'))
+    CREATE INDEX [IX_Questions_CreatedAt] ON [dbo].[Questions]([CreatedAt] DESC);
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_Questions_CategoryId' AND object_id = OBJECT_ID('dbo.Questions'))
+    CREATE INDEX [IX_Questions_CategoryId] ON [dbo].[Questions]([CategoryId]);
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_Answers_QuestionId' AND object_id = OBJECT_ID('dbo.Answers'))
+    CREATE INDEX [IX_Answers_QuestionId] ON [dbo].[Answers]([QuestionId]);
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_Comments_AnswerId' AND object_id = OBJECT_ID('dbo.Comments'))
+    CREATE INDEX [IX_Comments_AnswerId] ON [dbo].[Comments]([AnswerId]);
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_Votes_QuestionId' AND object_id = OBJECT_ID('dbo.Votes'))
+    CREATE INDEX [IX_Votes_QuestionId] ON [dbo].[Votes]([QuestionId]) WHERE [QuestionId] IS NOT NULL;
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_Votes_AnswerId' AND object_id = OBJECT_ID('dbo.Votes'))
+    CREATE INDEX [IX_Votes_AnswerId] ON [dbo].[Votes]([AnswerId]) WHERE [AnswerId] IS NOT NULL;
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_Votes_CommentId' AND object_id = OBJECT_ID('dbo.Votes'))
+    CREATE INDEX [IX_Votes_CommentId] ON [dbo].[Votes]([CommentId]) WHERE [CommentId] IS NOT NULL;
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_QuestionTags_TagId' AND object_id = OBJECT_ID('dbo.QuestionTags'))
+    CREATE INDEX [IX_QuestionTags_TagId] ON [dbo].[QuestionTags]([TagId]);
+");
+}
+
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
@@ -152,7 +209,17 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseStaticFiles();
+app.UseResponseCompression();
+app.UseStaticFiles(new StaticFileOptions
+{
+    OnPrepareResponse = ctx =>
+    {
+        if (!app.Environment.IsDevelopment())
+        {
+            ctx.Context.Response.Headers["Cache-Control"] = "public,max-age=604800";
+        }
+    }
+});
 
 app.UseRouting();
 

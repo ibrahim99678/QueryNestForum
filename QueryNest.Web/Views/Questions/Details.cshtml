@@ -79,15 +79,6 @@
     </div>
 </div>
 
-@if (TempData["Error"] is string errorMessage && !string.IsNullOrWhiteSpace(errorMessage))
-{
-    <div class="alert alert-danger mt-3">@errorMessage</div>
-}
-@if (TempData["ReportMessage"] is string reportMessage && !string.IsNullOrWhiteSpace(reportMessage))
-{
-    <div class="alert alert-info mt-3">@reportMessage</div>
-}
-
 @if (User.Identity?.IsAuthenticated == true)
 {
     <div class="card mt-3">

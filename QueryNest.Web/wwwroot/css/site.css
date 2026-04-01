@@ -21,6 +21,39 @@ body {
   margin-bottom: 60px;
 }
 
+.app-footer {
+  margin-top: 2.5rem;
+  padding: 1.75rem 0;
+  background: linear-gradient(180deg, rgba(248, 249, 250, 0.7), rgba(248, 249, 250, 1));
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.app-footer .footer-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  color: #212529;
+  text-decoration: none;
+}
+
+.app-footer .footer-brand img {
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.app-footer .footer-links a {
+  color: #6c757d;
+  text-decoration: none;
+}
+
+.app-footer .footer-links a:hover {
+  color: #212529;
+  text-decoration: underline;
+}
+
 .auth-shell {
   min-height: calc(100vh - 60px);
   background:
@@ -133,6 +166,16 @@ body {
 
 .md-toolbar .btn {
   border-radius: 0.6rem;
+}
+
+.md-toolbar {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.md-toolbar .btn {
+  white-space: nowrap;
 }
 
 .app-navbar {
@@ -263,4 +306,108 @@ body {
   border-radius: 999px;
   border: 1px solid rgba(0, 0, 0, 0.12);
   object-fit: cover;
+}
+
+.home-hero {
+  background:
+    radial-gradient(1200px 600px at 10% 10%, rgba(37, 140, 251, 0.16), transparent 60%),
+    radial-gradient(900px 500px at 90% 20%, rgba(111, 66, 193, 0.16), transparent 55%),
+    radial-gradient(800px 500px at 50% 100%, rgba(25, 135, 84, 0.12), transparent 60%),
+    linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.home-kicker {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  background: rgba(13, 110, 253, 0.08);
+  color: #0b2a63;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.home-search .input-group-text {
+  border-radius: 999px 0 0 999px;
+}
+
+.home-search .form-control {
+  border-left: 0;
+}
+
+.home-search .btn {
+  border-radius: 0 999px 999px 0;
+}
+
+.home-stat,
+.home-callout {
+  border-radius: 1rem;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.06);
+}
+
+.home-callout {
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.home-topic {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.home-list .list-group-item {
+  border-radius: 0.9rem;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  margin-bottom: 0.6rem;
+}
+
+.toast-top-right {
+  position: fixed;
+  top: 0.9rem;
+  right: 0.9rem;
+  z-index: 1090;
+}
+
+.question-list .list-group-item {
+  border-radius: 0.9rem;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  margin-bottom: 0.6rem;
+}
+
+@media (max-width: 575.98px) {
+  .toast-top-right {
+    left: 0.75rem;
+    right: 0.75rem;
+    top: 0.75rem;
+  }
+
+  .toast-top-right .toast {
+    width: 100%;
+  }
+
+  .md-toolbar {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 0.25rem;
+  }
+
+  .question-item-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .question-item-title {
+    font-size: 1rem;
+  }
+
+  .question-item-date {
+    margin-top: 0.15rem;
+  }
+
+  .question-item-meta .badge.bg-primary {
+    margin-left: auto;
+  }
 }
