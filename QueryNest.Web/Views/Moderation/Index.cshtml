@@ -61,6 +61,13 @@ else
                             <button type="submit" class="btn btn-sm btn-outline-secondary w-100">Reject</button>
                         </form>
 
+                        <form asp-action="DeleteContent" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="reportId" value="@r.ReportId" />
+                            <input type="text" name="reviewNote" class="form-control form-control-sm mb-2" placeholder="Delete note (optional)" />
+                            <button type="submit" class="btn btn-sm btn-danger w-100 js-confirm-delete">Delete content</button>
+                        </form>
+
                         <form asp-action="Ban" method="post">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="userId" value="@r.ContentOwnerUserId" />

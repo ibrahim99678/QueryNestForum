@@ -3,14 +3,14 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - QueryNest.Web</title>
+    <title>@ViewData["Title"] - QueryNest</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/QueryNest.Web.styles.css" asp-append-version="true" />
 </head>
 <body>
     <header>
-        <nav class="navbar app-navbar navbar-expand-lg">
+        <nav class="navbar app-navbar navbar-expand-lg navbar-light">
             <div class="container-fluid">
                 <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">
                     <img src="~/images/default-avatar.svg" alt="QueryNest" class="brand-mark" />
@@ -83,6 +83,28 @@
                             @await Component.InvokeAsync("UserNav")
                         }
                     </ul>
+
+                    <div class="d-lg-none px-2 mt-3">
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <div class="d-grid gap-2">
+                                <a class="btn btn-outline-secondary nav-pill-btn" asp-controller="Profile" asp-action="Index">Profile</a>
+                                <a class="btn btn-outline-secondary nav-pill-btn" asp-controller="Profile" asp-action="ChangePassword">Change password</a>
+                                <a class="btn btn-outline-secondary nav-pill-btn" asp-controller="Notifications" asp-action="Index">Notifications</a>
+                                <form asp-controller="Account" asp-action="Logout" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-outline-danger w-100 nav-pill-btn">Logout</button>
+                                </form>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="d-grid gap-2">
+                                <a class="btn btn-outline-secondary nav-pill-btn" asp-controller="Account" asp-action="Login">Log in</a>
+                                <a class="btn btn-primary nav-pill-btn" asp-controller="Account" asp-action="Register">Sign up</a>
+                            </div>
+                        }
+                    </div>
                 </div>
             </div>
         </nav>
@@ -154,13 +176,23 @@
                     </div>
                 </div>
                 <div class="col-md-6 text-md-end footer-links">
+                    @{
+                        var version =
+                            System.Reflection.Assembly.GetExecutingAssembly()
+                                .GetCustomAttributes(typeof(System.Reflection.AssemblyInformationalVersionAttribute), false)
+                                .FirstOrDefault() is System.Reflection.AssemblyInformationalVersionAttribute v
+                                ? v.InformationalVersion
+                                : (System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "1.0.0");
+                    }
                     <a asp-controller="Home" asp-action="Privacy">Privacy</a>
                     <span class="text-muted px-2">•</span>
                     <a asp-controller="Questions" asp-action="Index">Questions</a>
                     <span class="text-muted px-2">•</span>
                     <a asp-controller="Tags" asp-action="Index">Topics</a>
                     <div class="text-muted small mt-2">
-                        &copy; @DateTime.UtcNow.Year QueryNest. All rights reserved.
+                        <span>v@version</span>
+                        <span class="px-2">•</span>
+                        <span>&copy; @DateTime.UtcNow.Year QueryNest. All rights reserved.</span>
                     </div>
                 </div>
             </div>

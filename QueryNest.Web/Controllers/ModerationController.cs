@@ -64,6 +64,29 @@ public class ModerationController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteContent(int reportId, string? reviewNote, CancellationToken cancellationToken)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            return RedirectToAction("Login", "Account");
+        }
+
+        var result = await _reportService.DeleteReportedContentAsync(userId, reportId, reviewNote, cancellationToken);
+        if (!result.Succeeded)
+        {
+            TempData["Error"] = string.Join(" ", result.Errors);
+        }
+        else
+        {
+            TempData["Success"] = "Content deleted.";
+        }
+
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Ban(int userId, int days = 7, string? reason = null, CancellationToken cancellationToken = default)
     {
         var moderatorAspNetUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -90,4 +113,3 @@ public class ModerationController : Controller
         return RedirectToAction(nameof(Index));
     }
 }
-

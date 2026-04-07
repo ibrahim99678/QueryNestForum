@@ -13,11 +13,22 @@ public class ReportService : IReportService
 {
     private readonly UserManager<IdentityUser> _userManager;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IQuestionService _questionService;
+    private readonly IAnswerService _answerService;
+    private readonly ICommentService _commentService;
 
-    public ReportService(UserManager<IdentityUser> userManager, IUnitOfWork unitOfWork)
+    public ReportService(
+        UserManager<IdentityUser> userManager,
+        IUnitOfWork unitOfWork,
+        IQuestionService questionService,
+        IAnswerService answerService,
+        ICommentService commentService)
     {
         _userManager = userManager;
         _unitOfWork = unitOfWork;
+        _questionService = questionService;
+        _answerService = answerService;
+        _commentService = commentService;
     }
 
     public async Task<AuthResultDto> CreateAsync(string aspNetUserId, ReportCreateRequestDto request, CancellationToken cancellationToken = default)
@@ -187,6 +198,68 @@ public class ReportService : IReportService
 
         _unitOfWork.Reports.Update(report);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return AuthResultDto.Success();
+    }
+
+    public async Task<AuthResultDto> DeleteReportedContentAsync(string moderatorAspNetUserId, int reportId, string? reviewNote, CancellationToken cancellationToken = default)
+    {
+        var moderator = await _userManager.FindByIdAsync(moderatorAspNetUserId);
+        if (moderator is null)
+        {
+            return AuthResultDto.Failed("User not found.");
+        }
+
+        var isModerator = await _userManager.IsInRoleAsync(moderator, "Admin") || await _userManager.IsInRoleAsync(moderator, "Moderator");
+        if (!isModerator)
+        {
+            return AuthResultDto.Failed("Not allowed.");
+        }
+
+        var report = await _unitOfWork.Reports.Query()
+            .FirstOrDefaultAsync(r => r.ReportId == reportId, cancellationToken);
+
+        if (report is null)
+        {
+            return AuthResultDto.Failed("Report not found.");
+        }
+
+        if (report.Status != ReportStatus.Pending)
+        {
+            return AuthResultDto.Failed("Report already reviewed.");
+        }
+
+        AuthResultDto deleteResult;
+        if (report.TargetType == ReportTargetType.Question && report.QuestionId is not null)
+        {
+            deleteResult = await _questionService.DeleteAsync(moderatorAspNetUserId, report.QuestionId.Value, cancellationToken);
+        }
+        else if (report.TargetType == ReportTargetType.Answer && report.AnswerId is not null)
+        {
+            (deleteResult, _) = await _answerService.DeleteAsync(moderatorAspNetUserId, report.AnswerId.Value, cancellationToken);
+        }
+        else if (report.TargetType == ReportTargetType.Comment && report.CommentId is not null)
+        {
+            (deleteResult, _) = await _commentService.DeleteAsync(moderatorAspNetUserId, report.CommentId.Value, cancellationToken);
+        }
+        else
+        {
+            return AuthResultDto.Failed("Invalid report target.");
+        }
+
+        if (!deleteResult.Succeeded)
+        {
+            return deleteResult;
+        }
+
+        var reportToDelete = await _unitOfWork.Reports.Query()
+            .FirstOrDefaultAsync(r => r.ReportId == reportId, cancellationToken);
+
+        if (reportToDelete is not null)
+        {
+            _unitOfWork.Reports.Remove(reportToDelete);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+        }
 
         return AuthResultDto.Success();
     }

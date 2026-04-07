@@ -91,6 +91,7 @@ public class ProfileController : Controller
             return View("Index", model);
         }
 
+        TempData["Success"] = "Profile updated successfully.";
         return RedirectToAction(nameof(Index));
     }
 

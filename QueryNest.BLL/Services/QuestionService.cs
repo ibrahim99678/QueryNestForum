@@ -377,7 +377,7 @@ public class QuestionService : IQuestionService
             return AuthResultDto.Failed("Question not found.");
         }
 
-        if (question.UserId != userProfile.UserId && !await IsInRoleAsync(aspNetUserId, "Admin"))
+        if (question.UserId != userProfile.UserId && !await IsModeratorAsync(aspNetUserId))
         {
             return AuthResultDto.Failed("Not allowed.");
         }
@@ -416,9 +416,57 @@ public class QuestionService : IQuestionService
             return AuthResultDto.Failed("Question not found.");
         }
 
-        if (question.UserId != userProfile.UserId && !await IsInRoleAsync(aspNetUserId, "Admin"))
+        if (question.UserId != userProfile.UserId && !await IsModeratorAsync(aspNetUserId))
         {
             return AuthResultDto.Failed("Not allowed.");
+        }
+
+        var answerIds = await _unitOfWork.Answers.Query()
+            .AsNoTracking()
+            .Where(a => a.QuestionId == questionId)
+            .Select(a => a.AnswerId)
+            .ToListAsync(cancellationToken);
+
+        var commentIds = await _unitOfWork.Comments.Query()
+            .AsNoTracking()
+            .Where(c => answerIds.Contains(c.AnswerId))
+            .Select(c => c.CommentId)
+            .ToListAsync(cancellationToken);
+
+        var votes = await _unitOfWork.Votes.Query()
+            .Where(v =>
+                v.QuestionId == questionId ||
+                (v.AnswerId != null && answerIds.Contains(v.AnswerId.Value)) ||
+                (v.CommentId != null && commentIds.Contains(v.CommentId.Value)))
+            .ToListAsync(cancellationToken);
+
+        foreach (var v in votes)
+        {
+            _unitOfWork.Votes.Remove(v);
+        }
+
+        var notifications = await _unitOfWork.Notifications.Query()
+            .Where(n =>
+                n.QuestionId == questionId ||
+                (n.AnswerId != null && answerIds.Contains(n.AnswerId.Value)) ||
+                (n.CommentId != null && commentIds.Contains(n.CommentId.Value)))
+            .ToListAsync(cancellationToken);
+
+        foreach (var n in notifications)
+        {
+            _unitOfWork.Notifications.Remove(n);
+        }
+
+        var reports = await _unitOfWork.Reports.Query()
+            .Where(r =>
+                r.QuestionId == questionId ||
+                (r.AnswerId != null && answerIds.Contains(r.AnswerId.Value)) ||
+                (r.CommentId != null && commentIds.Contains(r.CommentId.Value)))
+            .ToListAsync(cancellationToken);
+
+        foreach (var r in reports)
+        {
+            _unitOfWork.Reports.Remove(r);
         }
 
         _unitOfWork.Questions.Remove(question);
@@ -442,6 +490,17 @@ public class QuestionService : IQuestionService
         }
 
         return await _userManager.IsInRoleAsync(user, role);
+    }
+
+    private async Task<bool> IsModeratorAsync(string aspNetUserId)
+    {
+        var user = await _userManager.FindByIdAsync(aspNetUserId);
+        if (user is null)
+        {
+            return false;
+        }
+
+        return await _userManager.IsInRoleAsync(user, "Admin") || await _userManager.IsInRoleAsync(user, "Moderator");
     }
 
     private async Task ReplaceTagsAsync(int questionId, int[] tagIds, string? newTagsCsv, CancellationToken cancellationToken)

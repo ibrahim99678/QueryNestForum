@@ -150,7 +150,7 @@ public class CommentService : ICommentService
             return (AuthResultDto.Failed("Comment not found."), null);
         }
 
-        if (comment.UserId != profile.UserId && !await IsInRoleAsync(aspNetUserId, "Admin"))
+        if (comment.UserId != profile.UserId && !await IsModeratorAsync(aspNetUserId))
         {
             return (AuthResultDto.Failed("Not allowed."), comment.Answer.QuestionId);
         }
@@ -189,7 +189,7 @@ public class CommentService : ICommentService
             return (AuthResultDto.Failed("Comment not found."), null);
         }
 
-        if (comment.UserId != profile.UserId && !await IsInRoleAsync(aspNetUserId, "Admin"))
+        if (comment.UserId != profile.UserId && !await IsModeratorAsync(aspNetUserId))
         {
             return (AuthResultDto.Failed("Not allowed."), comment.Answer.QuestionId);
         }
@@ -232,6 +232,24 @@ public class CommentService : ICommentService
             _unitOfWork.Votes.Remove(vote);
         }
 
+        var notifications = await _unitOfWork.Notifications.Query()
+            .Where(n => n.CommentId != null && toDelete.Contains(n.CommentId.Value))
+            .ToListAsync(cancellationToken);
+
+        foreach (var n in notifications)
+        {
+            _unitOfWork.Notifications.Remove(n);
+        }
+
+        var reports = await _unitOfWork.Reports.Query()
+            .Where(r => r.CommentId != null && toDelete.Contains(r.CommentId.Value))
+            .ToListAsync(cancellationToken);
+
+        foreach (var r in reports)
+        {
+            _unitOfWork.Reports.Remove(r);
+        }
+
         var comments = await _unitOfWork.Comments.Query()
             .Where(c => toDelete.Contains(c.CommentId))
             .ToListAsync(cancellationToken);
@@ -255,5 +273,16 @@ public class CommentService : ICommentService
         }
 
         return await _userManager.IsInRoleAsync(user, role);
+    }
+
+    private async Task<bool> IsModeratorAsync(string aspNetUserId)
+    {
+        var user = await _userManager.FindByIdAsync(aspNetUserId);
+        if (user is null)
+        {
+            return false;
+        }
+
+        return await _userManager.IsInRoleAsync(user, "Admin") || await _userManager.IsInRoleAsync(user, "Moderator");
     }
 }
